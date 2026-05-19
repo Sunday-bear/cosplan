@@ -3,115 +3,103 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cosplan - 集邮卡片</title>
+  <title>Cosplan · 漫展黑话通</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <style>
     :root {
       --pink: #ff6b9d; --purple: #7c3aed;
-      --bg: #0d0614; --card: rgba(255,255,255,0.08);
-      --text: #fff; --text-secondary: rgba(255,255,255,0.55);
-      --radius: 20px; --radius-sm: 14px;
+      --bg: #0d0614; --card: rgba(255,255,255,0.06);
+      --text: #fff; --sub: rgba(255,255,255,0.5);
+      --radius: 18px; --radius-sm: 12px;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin:0;padding:0;box-sizing:border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
       background: var(--bg); color: var(--text); min-height: 100vh; min-height: 100dvh;
       -webkit-font-smoothing: antialiased; display: flex; justify-content: center;
     }
-    .app { width: 100%; max-width: 480px; padding: 0 16px 120px; position: relative; z-index: 1; }
-    .header { text-align: center; padding: 40px 0 24px; }
-    .logo-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
-    .logo-icon { font-size: 36px; line-height: 1; }
-    .logo-text { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, var(--pink), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .tagline { font-size: 14px; color: var(--text-secondary); }
-    .tagline span { background: rgba(255,107,157,0.2); color: #ff9ec4; padding: 2px 10px; border-radius: 20px; font-weight: 600; font-size: 12px; }
-    .step { display: none; }
-    .step.active { display: block; }
-    .step-title { font-size: 18px; font-weight: 700; margin: 20px 0 12px; display: flex; align-items: center; gap: 8px; }
-    .step-card { background: var(--card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+    .app { width: 100%; max-width: 480px; padding: 0 16px 60px; position: relative; z-index: 1; }
 
-    /* Photo grid */
-    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .photo-slot {
-      aspect-ratio: 1; border-radius: var(--radius-sm); background: rgba(255,255,255,0.04);
-      border: 2px dashed rgba(255,255,255,0.12); display: flex; align-items: center;
-      justify-content: center; cursor: pointer; transition: all 0.15s; position: relative;
-      overflow: hidden; -webkit-tap-highlight-color: transparent;
+    .header { text-align: center; padding: 44px 0 20px; }
+    .logo { font-size: 36px; line-height: 1; }
+    .title {
+      font-size: 26px; font-weight: 800; margin: 8px 0 6px;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .photo-slot:active { border-color: var(--pink); background: rgba(255,107,157,0.08); }
-    .photo-slot.filled { border-style: solid; border-color: rgba(255,255,255,0.1); }
-    .photo-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .photo-slot .plus { font-size: 32px; color: rgba(255,255,255,0.25); }
-    .photo-slot .slot-label { position: absolute; bottom: 4px; left: 4px; right: 4px; background: rgba(0,0,0,0.6); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 6px; display: none; max-width: calc(100% - 8px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .photo-slot.filled .slot-label { display: block; }
-    .slot-delete {
-      position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%;
-      background: rgba(0,0,0,0.6); color: #fff; font-size: 14px; line-height: 22px; text-align: center;
-      cursor: pointer; display: none;
+    .subtitle { font-size: 14px; color: var(--sub); }
+    .subtitle span { color: #ff9ec4; font-weight: 600; }
+
+    /* Scene tabs */
+    .tabs-wrap { position: sticky; top: 0; z-index: 10; background: var(--bg); padding: 8px 0 12px; margin: 0 -16px; padding-left: 16px; }
+    .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex-shrink: 0; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; border: 1.5px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.55); transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent; user-select: none;
     }
-    .photo-slot.filled .slot-delete { display: block; }
+    .tab.active { background: rgba(255,107,157,0.18); border-color: var(--pink); color: #ff9ec4; }
+    .tab:active { transform: scale(0.96); }
 
-    .photo-count-hint { font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 8px; }
-
-    /* Inputs */
-    .input-row { display: flex; gap: 10px; margin-bottom: 12px; }
-    .input-char {
-      flex: 1; height: 48px; border: 1.5px solid rgba(255,255,255,0.15);
-      border-radius: var(--radius-sm); padding: 0 16px; font-size: 15px; outline: none;
-      background: rgba(255,255,255,0.06); color: #fff; transition: border-color 0.2s;
+    /* Template cards */
+    .card-list { display: flex; flex-direction: column; gap: 10px; }
+    .card {
+      background: var(--card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius); padding: 16px;
+      transition: all 0.2s;
     }
-    .input-char:focus { border-color: var(--pink); background: rgba(255,255,255,0.1); }
-    .input-char::placeholder { color: rgba(255,255,255,0.3); }
+    .card:active { border-color: rgba(255,107,157,0.3); }
 
-    .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-    .style-chip {
-      padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
-      cursor: pointer; border: 1.5px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.65); transition: all 0.15s;
-      -webkit-tap-highlight-color: transparent;
+    .card-tags { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+    .card-tag {
+      font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 12px;
+      background: rgba(255,107,157,0.12); color: #ff9ec4;
     }
-    .style-chip.active { background: rgba(255,107,157,0.2); border-color: var(--pink); color: #ff9ec4; }
-    .style-chip:active { transform: scale(0.96); }
+    .card-tag.green { background: rgba(16,185,129,0.12); color: #34d399; }
+    .card-tag.blue { background: rgba(96,165,250,0.12); color: #93c5fd; }
 
-    /* Result */
-    .result-wrap { background: rgba(255,255,255,0.04); border-radius: var(--radius); padding: 16px; text-align: center; }
-    .result-wrap canvas { max-width: 100%; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
-    .result-label { font-size: 13px; color: var(--text-secondary); margin-top: 12px; }
-
-    .caption-card { background: rgba(255,255,255,0.06); border-radius: var(--radius-sm); padding: 14px 16px; margin-top: 12px; }
-    .caption-platform { font-size: 11px; font-weight: 700; color: #ff9ec4; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-    .caption-text { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.8); margin-bottom: 8px; }
-    .caption-copy { font-size: 12px; font-weight: 600; color: #a78bfa; cursor: pointer; padding: 5px 12px; background: rgba(124,58,237,0.15); border-radius: 20px; display: inline-block; border: none; }
-    .caption-copy:active { background: var(--purple); color: #fff; }
-
-    .btn-primary {
-      width: 100%; height: 52px; background: linear-gradient(135deg, var(--pink), var(--purple));
-      color: #fff; border: none; border-radius: var(--radius-sm); font-size: 16px;
-      font-weight: 700; cursor: pointer; letter-spacing: 1px; margin-top: 16px;
+    .card-text {
+      font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.04); padding: 12px 14px; border-radius: var(--radius-sm);
+      position: relative; margin-bottom: 10px;
     }
-    .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
-    .btn-primary:disabled { opacity: 0.4; transform: none; cursor: not-allowed; }
+    .card-text .highlight { color: #ff9ec4; font-weight: 600; }
 
-    .btn-secondary {
-      width: 100%; height: 48px; border: 1.5px solid rgba(255,107,157,0.4);
-      background: rgba(255,255,255,0.06); color: #ff9ec4; border-radius: var(--radius-sm);
-      font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px;
+    .card-scene {
+      font-size: 11px; color: var(--sub); margin-bottom: 8px; display: flex; align-items: center; gap: 4px;
     }
-    .btn-secondary:active { background: rgba(255,107,157,0.15); }
+
+    .card-actions { display: flex; gap: 8px; }
+    .btn-copy {
+      font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 18px; cursor: pointer;
+      border: none; background: linear-gradient(135deg, var(--pink), var(--purple));
+      color: #fff; transition: all 0.15s; letter-spacing: 0.5px;
+    }
+    .btn-copy:active { transform: scale(0.96); opacity: 0.85; }
+    .btn-copy.copied { background: #10b981; }
+
+    .btn-tone {
+      font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 16px; cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.15); background: transparent;
+      color: rgba(255,255,255,0.5); transition: all 0.15s;
+    }
+    .btn-tone.active { border-color: var(--purple); color: #a78bfa; background: rgba(124,58,237,0.12); }
 
     .toast {
-      position: fixed; top: 50px; left: 50%; transform: translateX(-50%); background: var(--purple);
-      color: #fff; padding: 10px 24px; border-radius: 30px; font-size: 14px; font-weight: 600;
-      opacity: 0; transition: opacity 0.3s; z-index: 200; pointer-events: none;
+      position: fixed; top: 50px; left: 50%; transform: translateX(-50%); z-index: 200;
+      background: var(--purple); color: #fff; padding: 10px 24px; border-radius: 30px;
+      font-size: 14px; font-weight: 600; opacity: 0; transition: opacity 0.3s; pointer-events: none;
     }
     .toast.show { opacity: 1; }
 
-    .footer { text-align: center; padding: 24px 0; color: rgba(255,255,255,0.25); font-size: 12px; }
+    .footer { text-align: center; padding: 24px 0; color: rgba(255,255,255,0.18); font-size: 12px; }
 
-    .bg-decor { position: fixed; top: -100px; right: -100px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(255,107,157,0.08), transparent 70%); pointer-events: none; z-index: 0; }
-    .bg-decor2 { position: fixed; bottom: -80px; left: -80px; width: 250px; height: 250px; border-radius: 50%; background: radial-gradient(circle, rgba(124,58,237,0.08), transparent 70%); pointer-events: none; z-index: 0; }
+    .bg-decor { position: fixed; top: -120px; right: -120px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(255,107,157,0.06), transparent 70%); pointer-events: none; z-index: 0; }
+    .bg-decor2 { position: fixed; bottom: -100px; left: -100px; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(124,58,237,0.06), transparent 70%); pointer-events: none; z-index: 0; }
   </style>
 </head>
 <body>
@@ -119,402 +107,168 @@
 
   <div class="app">
     <header class="header">
-      <div class="logo-row"><span class="logo-icon">📸</span><span class="logo-text">Cosplan</span></div>
-      <p class="tagline">漫展集邮卡片 · <span>一天的回忆，一张卡片</span></p>
+      <div class="logo">💬</div>
+      <div class="title">漫展黑话通</div>
+      <p class="subtitle">社恐嘴替 · <span>不知道怎么开口？复制就行</span></p>
     </header>
 
-    <!-- Step 1 -->
-    <div class="step active" id="stepUpload">
-      <div class="step-title">📷 今天的集邮照（1-9张）</div>
-      <div class="step-card">
-        <div class="photo-grid" id="photoGrid">
-          <div class="photo-slot" data-index="0"><span class="plus">+</span><span class="slot-delete" onclick="event.stopPropagation();removePhoto(0)">×</span><span class="slot-label"></span></div>
-          <div class="photo-slot" data-index="1"><span class="plus">+</span><span class="slot-delete" onclick="event.stopPropagation();removePhoto(1)">×</span><span class="slot-label"></span></div>
-          <div class="photo-slot" data-index="2"><span class="plus">+</span><span class="slot-delete" onclick="event.stopPropagation();removePhoto(2)">×</span><span class="slot-label"></span></div>
-          <div class="photo-slot" data-index="3"><span class="plus">+</span><span class="slot-delete" onclick="event.stopPropagation();removePhoto(3)">×</span><span class="slot-label"></span></div>
-          <div class="photo-slot" data-index="4"><span class="plus">+</span><span class="slot-delete" onclick="event.stopPropagation();removePhoto(4)">×</span><span class="slot-label"></span></div>
-          <div class="photo-slot" data-index="5"><span class="plus">+</span><span class="slot-delete" onclick="event.stopPropagation();removePhoto(5)">×</span><span class="slot-label"></span></div>
-          <div class="photo-slot" data-index="6"><span class="plus">+</span><span class="slot-delete" onclick="event.stopPropagation();removePhoto(6)">×</span><span class="slot-label"></span></div>
-          <div class="photo-slot" data-index="7"><span class="plus">+</span><span class="slot-delete" onclick="event.stopPropagation();removePhoto(7)">×</span><span class="slot-label"></span></div>
-          <div class="photo-slot" data-index="8"><span class="plus">+</span><span class="slot-delete" onclick="event.stopPropagation();removePhoto(8)">×</span><span class="slot-label"></span></div>
-        </div>
-        <div class="photo-count-hint">点 + 添加照片，最少 1 张，最多 9 张</div>
-        <input type="file" accept="image/*" id="fileInput" style="display:none;">
-        <input type="file" accept="image/*" id="multiInput" style="display:none;" multiple>
-        <div style="display:flex;gap:10px;margin-top:10px;">
-          <button class="btn-secondary" id="btnMulti" style="flex:1;font-size:14px;margin-top:0;">📁 批量选图</button>
-          <button class="btn-secondary" id="btnCamera" style="flex:1;font-size:14px;margin-top:0;">📷 拍照</button>
-        </div>
-      </div>
-
-      <div class="step-title" style="margin-top:8px;">🎭 角色标签（按顺序填）</div>
-      <div class="input-row"><input class="input-char" id="charNames" placeholder="角色名（用逗号分割，如：蕾姆, 五条悟, 时崎狂三）" maxlength="200"></div>
-
-      <div class="step-title">📍 漫展信息</div>
-      <div class="input-row"><input class="input-char" id="eventName" placeholder="漫展名称（如：萤火虫漫展）" maxlength="30"></div>
-      <div class="input-row"><input class="input-char" id="eventDate" type="date"></div>
-
-      <button class="btn-primary" id="btnGenerate" disabled>✨ 生成集邮卡片</button>
-      <div class="footer">Cosplan · cosplan.top</div>
+    <div class="tabs-wrap">
+      <div class="tabs" id="tabs"></div>
     </div>
 
-    <!-- Step 2: Preview -->
-    <div class="step" id="stepPreview">
-      <div class="step-title">🎨 选择风格</div>
-      <div class="step-card">
-        <div class="chip-row" id="styleRow">
-          <div class="style-chip active" data-style="pink">🌸 粉系漫展</div>
-          <div class="style-chip" data-style="dark">🌙 暗夜幻境</div>
-          <div class="style-chip" data-style="warm">📸 暖调胶片</div>
-          <div class="style-chip" data-style="clean">✨ 简约干净</div>
-        </div>
-      </div>
-
-      <div class="result-wrap">
-        <canvas id="resultCanvas" style="width:100%;"></canvas>
-        <div class="result-label">👆 长按卡片保存到相册</div>
-      </div>
-
-      <div class="caption-card">
-        <div class="caption-platform">📱 朋友圈 / 小红书 / 微博</div>
-        <div class="caption-text" id="captionText"></div>
-        <span class="caption-copy" onclick="copyCaption()">📋 一键复制文案</span>
-      </div>
-
-      <button class="btn-primary" onclick="downloadCard()">💾 保存卡片</button>
-      <button class="btn-secondary" onclick="shareCard()">📤 分享给朋友</button>
-      <button class="btn-secondary" onclick="resetAll()" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);">🔄 重新生成</button>
-      <div class="footer">Cosplan · cosplan.top</div>
-    </div>
+    <div class="card-list" id="cardList"></div>
+    <div class="footer">Cosplan · cosplan.top</div>
   </div>
 
   <div class="toast" id="toast"></div>
 
 <script>
-const $=id=>document.getElementById(id);
-let photos=[]; // {img, label} pair
-let currentStyle='pink';
-let editingIndex=-1;
-let cardBlob=null;
+// --- Database ---
+const scenes = [
+  { id:'jyp', icon:'📸', name:'找Coser集邮' },
+  { id:'photog', icon:'📷', name:'找摄影师' },
+  { id:'hair', icon:'💇', name:'找毛娘/妆娘' },
+  { id:'pic', icon:'📩', name:'要返图' },
+  { id:'praise', icon:'👍', name:'夸人/被夸' },
+  { id:'shop', icon:'🛍️', name:'买周边/问装备' },
+  { id:'follow', icon:'📞', name:'漫展后跟进' },
+  { id:'help', icon:'🆘', name:'现场求助' },
+];
+
+const tones = ['😊 客气', '😎 随意', '🥰 可爱'];
+
+const templates = {
+  photog: [
+    { text:'你好！请问你现在有空吗？想请你帮我拍几张，我出的是{角色}，大概需要10分钟左右就行~', tips:'说明角色+时间预期，摄影师好安排' },
+    { text:'老师好！方便帮忙拍一下吗？随便按几张都行，不用修图！', tips:'降低对方心理负担' },
+    { text:'哈喽～这边需要一位摄影侠！捕捉一只野生{角色}，请求快门支援！📸', tips:'可爱语气，适合轻松氛围' },
+  ],
+  hair: [
+    { text:'你好，请问你接{角色}的造型吗？漫展当天的，方便报个价吗？', tips:'直接说明需求，节省双方时间' },
+    { text:'你好～想约{角色}的毛，你这边工期大概多久呀？', tips:'圈内「毛」=假发造型' },
+    { text:'请问接展妆吗？出{角色}，想要{风格}一点的风格～', tips:'提前说清风格偏好' },
+  ],
+  pic: [
+    { text:'今天漫展你帮我拍的照片，方便发我一下吗？不急，有空传我就行，谢谢！🙏', tips:'加「不急」减轻对方压力' },
+    { text:'哈喽～刚才拍的照片可以发我原图吗？我微博/小红书是{账号}，也可以直接艾特我！', tips:'留联系方式方便对方@你' },
+    { text:'打扰啦，今天展子上的照片能发我一下嘛？想看看效果～', tips:'轻松自然，不显得催' },
+  ],
+  praise: [
+    { text:'哇你这个{角色}还原度好高！！道具都是自己做的吗？好厉害！', tips:'夸细节比泛泛夸更有诚意' },
+    { text:'谢谢！！你的{角色}也超级棒的，我刚刚就在想你出得好好！', tips:'被夸时的自然回复+回夸' },
+    { text:'天哪你这个{角色}太绝了！！请问可以集个邮吗？', tips:'夸+集邮一气呵成' },
+  ],
+  shop: [
+    { text:'请问这套是在哪家买的呀？质感好好，想参考一下～', tips:'用「参考」比直接问更礼貌' },
+    { text:'这个可以便宜一点吗？我今天已经买了三件了555', tips:'略带撒娇，漫展场景适用' },
+    { text:'你好，请问有{角色}的周边吗？或者类似的款也行！', tips:'给摊主留推荐空间' },
+  ],
+  follow: [
+    { text:'上次漫展拍的照片你修好了吗？期待看到！不着急～', tips:'加「不着急」避免施压' },
+    { text:'哈喽！上次展子跟你集邮超开心的，你下次还去哪个展呀？', tips:'用下次展子自然延续话题' },
+    { text:'你的{角色}我发小红书了，要艾特你吗？', tips:'主动问要不要@，是很好的社交信号' },
+  ],
+  help: [
+    { text:'不好意思请问一下，{展厅}怎么走呀？', tips:'漫展现场最常用的求助' },
+    { text:'你好，请问你有多余的发卡/别针/胶带吗？我的道具突然崩了😭', tips:'漫展应急，圈内人都懂' },
+    { text:'打扰了！请问你是在排{活动}吗？方便告诉我排了多久吗？', tips:'排队信息是漫展硬通货' },
+  ],
+  jyp: [
+    { text:'你好！我超喜欢{角色}的，可以跟你合个影吗？', tips:'简单直接，最常用' },
+    { text:'哇你也出{作品}！！我今天也出了{我的角色}，可以一起拍一张吗？🥹', tips:'找到同作品粉丝，共鸣感强' },
+    { text:'你好～请问可以集个邮吗？你的{角色}真的太棒了！', tips:'先夸再问，成功率更高' },
+  ],
+};
+
+let activeScene = 'jyp';
+let activeTone = 0;
+
+// --- Build UI ---
+const tabsEl = document.getElementById('tabs');
+scenes.forEach(s => {
+  const t = document.createElement('div');
+  t.className = 'tab' + (s.id === activeScene ? ' active' : '');
+  t.textContent = s.icon + ' ' + s.name;
+  t.addEventListener('click', () => { activeScene = s.id; activeTone = 0; renderAll(); });
+  tabsEl.appendChild(t);
+});
+
+function renderAll() {
+  // Update tabs
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab:nth-child(${scenes.findIndex(s=>s.id===activeScene)+1})`).classList.add('active');
+
+  const list = templates[activeScene] || [];
+  const sceneInfo = scenes.find(s => s.id === activeScene);
+
+  const cardList = document.getElementById('cardList');
+  cardList.innerHTML = '';
+
+  if (!list.length) {
+    cardList.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--sub);">🚧 模板收集中，敬请期待</div>';
+    return;
+  }
+
+  list.forEach((tpl, idx) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const toneLabel = tones[activeTone];
+    const isCurrentTone = activeTone <= 2;
+
+    // Get text based on tone - rotate through templates with tone offset
+    const toneIdx = Math.min(activeTone, list.length - 1);
+    const useTpl = list[toneIdx] || list[0];
+
+    card.innerHTML = `
+      <div class="card-scene">${sceneInfo.icon} ${sceneInfo.name} · 场景${idx+1}</div>
+      <div class="card-tags">
+        <span class="card-tag">${toneLabel}</span>
+        ${tpl.tips ? `<span class="card-tag green">💡 ${tpl.tips}</span>` : ''}
+      </div>
+      <div class="card-text">${tpl.text}</div>
+      <div class="card-actions">
+        <button class="btn-copy" data-text="${tpl.text.replace(/"/g,'&quot;')}">📋 复制这段话</button>
+        ${activeTone < tones.length - 1 ? `<button class="btn-tone" data-tone="${activeTone+1}">换${tones[activeTone+1].replace(/^[^\s]+\s/,'')}语气 →</button>` : ''}
+        ${activeTone > 0 ? `<button class="btn-tone" data-tone="0">↺ 默认语气</button>` : ''}
+      </div>
+    `;
+
+    // Copy button
+    card.querySelector('.btn-copy').addEventListener('click', function(e) {
+      const text = this.dataset.text;
+      navigator.clipboard.writeText(text).then(() => {
+        this.textContent = '✅ 已复制';
+        this.classList.add('copied');
+        showToast('✅ 已复制，粘贴就能用！');
+        setTimeout(() => {
+          this.textContent = '📋 复制这段话';
+          this.classList.remove('copied');
+        }, 2000);
+      }).catch(() => showToast('📋 请长按文字手动复制'));
+    });
+
+    // Tone button
+    card.querySelectorAll('.btn-tone').forEach(btn => {
+      btn.addEventListener('click', function() {
+        activeTone = parseInt(this.dataset.tone);
+        renderAll();
+        document.getElementById('cardList').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    cardList.appendChild(card);
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
 
 // --- Init ---
-const slotEls=document.querySelectorAll('.photo-slot');
-slotEls.forEach(slot=>{
-  slot.addEventListener('click',()=>{editingIndex=parseInt(slot.dataset.index);$('fileInput').click();});
-});
-
-$('fileInput').addEventListener('change',e=>{
-  if(e.target.files[0])loadPhoto(e.target.files[0],editingIndex);
-  e.target.value='';
-});
-
-$('btnMulti').addEventListener('click',()=>$('multiInput').click());
-$('multiInput').addEventListener('change',e=>{
-  Array.from(e.target.files).forEach(file=>{
-    const idx=photos.length;
-    if(idx<9)loadPhoto(file,idx);
-  });
-  e.target.value='';
-});
-
-$('btnCamera').addEventListener('click',()=>{
-  const inp=document.createElement('input');
-  inp.type='file';inp.accept='image/*';inp.setAttribute('capture','environment');
-  inp.addEventListener('change',e=>{
-    if(e.target.files[0]){
-      const idx=photos.length;
-      if(idx<9)loadPhoto(e.target.files[0],idx);
-    }
-  });
-  inp.click();
-});
-
-function loadPhoto(file,idx){
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    const img=new Image();
-    img.onload=()=>{
-      if(idx>=photos.length){
-        photos.push({img,label:''});
-      }else{
-        photos[idx]={img,label:photos[idx]?photos[idx].label:''};
-      }
-      refreshSlots();
-      updateGenerateBtn();
-    };
-    img.src=ev.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-function removePhoto(idx){
-  photos.splice(idx,1);
-  refreshSlots();
-  updateGenerateBtn();
-}
-
-function refreshSlots(){
-  slotEls.forEach(slot=>{
-    const idx=parseInt(slot.dataset.index);
-    const img=slot.querySelector('img');
-    const plus=slot.querySelector('.plus');
-    const label=slot.querySelector('.slot-label');
-    const del=slot.querySelector('.slot-delete');
-
-    if(idx<photos.length){
-      if(img)img.src=photos[idx].img.src;
-      else{const el=document.createElement('img');el.src=photos[idx].img.src;slot.insertBefore(el,plus);}
-      plus.style.display='none';
-      del.style.display='block';
-      label.textContent=photos[idx].label||'';
-      slot.classList.add('filled');
-    }else{
-      if(img)img.remove();
-      plus.style.display='';
-      del.style.display='none';
-      label.textContent='';
-      slot.classList.remove('filled');
-    }
-  });
-}
-
-function updateGenerateBtn(){
-  $('btnGenerate').disabled=photos.length===0;
-}
-
-// --- Generate ---
-$('btnGenerate').addEventListener('click',()=>{
-  if(photos.length===0)return;
-  // Parse labels
-  const labels=($('charNames').value||'').split(/[,，、\s]+/).filter(Boolean);
-  photos.forEach((p,i)=>{p.label=labels[i]||'';});
-  refreshSlots();
-
-  $('stepUpload').classList.remove('active');
-  $('stepPreview').classList.add('active');
-  renderCard();updateCaption();
-  window.scrollTo({top:0,behavior:'smooth'});
-});
-
-// --- Style chips ---
-$('styleRow').addEventListener('click',e=>{
-  const chip=e.target.closest('.style-chip');
-  if(!chip)return;
-  currentStyle=chip.dataset.style;
-  document.querySelectorAll('#styleRow .style-chip').forEach(c=>c.classList.remove('active'));
-  chip.classList.add('active');
-  renderCard();
-});
-
-// --- Render card ---
-function getCardConfig(style){
-  const configs={
-    pink:{bg:'#fce4ec',text:'#4a0030',accent:'#ff6b9d',accent2:'#f48fb1',photoBg:'#f8bbd0',labelBg:'rgba(255,107,157,0.85)',filter:'saturate(1.15) brightness(1.05)'},
-    dark:{bg:'#12122a',text:'#e0e0ff',accent:'#a78bfa',accent2:'#7c3aed',photoBg:'#1e1e3a',labelBg:'rgba(124,58,237,0.8)',filter:'saturate(1.1) contrast(1.1) brightness(1.05)'},
-    warm:{bg:'#1a1a0a',text:'#ffe0a0',accent:'#f59e0b',accent2:'#d97706',photoBg:'#2a2a10',labelBg:'rgba(245,158,11,0.8)',filter:'saturate(0.9) contrast(1.1) brightness(1.02) sepia(0.3)'},
-    clean:{bg:'#fafafa',text:'#1a1a2e',accent:'#2563eb',accent2:'#60a5fa',photoBg:'#e8e8ee',labelBg:'rgba(37,99,235,0.8)',filter:'saturate(1.05) brightness(1.05) contrast(1.02)'}
-  };
-  return configs[style]||configs.pink;
-}
-
-function renderCard(){
-  const cfg=getCardConfig(currentStyle);
-  const n=photos.length;
-  if(n===0)return;
-
-  const canvas=$('resultCanvas'),ctx=canvas.getContext('2d');
-  const cardW=1000,cardH=n<=2?1200:(n<=4?1400:1600);
-  canvas.width=cardW;canvas.height=cardH;
-
-  // Background
-  ctx.fillStyle=cfg.bg;ctx.fillRect(0,0,cardW,cardH);
-
-  const pad=40,topPad=100,bottomPad=80;
-
-  // --- Header ---
-  const eventName=$('eventName').value.trim()||'漫展集邮';
-  const dateStr=$('eventDate').value||new Date().toISOString().slice(0,10);
-  const dateFormatted=dateStr.replace(/-/g,'.');
-
-  // Date badge
-  ctx.fillStyle=cfg.accent;ctx.font='700 22px "PingFang SC","Microsoft YaHei",sans-serif';ctx.textAlign='center';
-  ctx.fillText(dateFormatted,cardW/2,42);
-  // Event title
-  ctx.fillStyle=cfg.text;ctx.font='800 44px "PingFang SC","Microsoft YaHei",sans-serif';
-  ctx.fillText(`📸 ${eventName}`,cardW/2,92);
-
-  // --- Photo grid ---
-  let cols,rows;
-  if(n===1){cols=1;rows=1;}
-  else if(n===2){cols=2;rows=1;}
-  else if(n===3){cols=3;rows=1;}
-  else if(n===4){cols=2;rows=2;}
-  else if(n<=6){cols=3;rows=2;if(n===5)n=5;}
-  else{cols=3;rows=3;}
-  // Handle non-full rows: for 5 photos, first row 3, second row 2 (center them)
-  // For 7 photos: 3+3+1, for 8: 3+3+2, for 9: 3+3+3
-
-  const gridW=cardW-pad*2;
-  const gridH=cardH-topPad-bottomPad-120; // Leave room for labels below
-  const cellGap=12;
-  const cellW=(gridW-cellGap*(cols-1))/cols;
-  const cellH=Math.min((gridH-cellGap*(rows-1))/rows,cellW*1.3);
-  const gridStartY=topPad+20;
-
-  // Draw photos
-  for(let i=0;i<Math.min(n,9);i++){
-    const photo=photos[i];
-    if(!photo||!photo.img)continue;
-
-    // Calculate position
-    let col,row;
-    if(n<=6){
-      const actualRows=Math.ceil(n/3);
-      const actualCols=n<=3?n:(n<=4?2:3);
-      const actualGap=cellGap;
-      const actualCellW=(gridW-actualGap*(actualCols-1))/actualCols;
-      const actualCellH=Math.min((gridH-actualGap*(actualRows-1))/actualRows,actualCellW*1.3);
-      const perRow=n<=3?n:(n<=4?2:3);
-      col=i%perRow;
-      row=Math.floor(i/perRow);
-      // Center last row
-      const itemsInRow=(row===actualRows-1)?(n-row*perRow):perRow;
-      const rowWidth=itemsInRow*actualCellW+(itemsInRow-1)*actualGap;
-      const offsetX=pad+(gridW-rowWidth)/2;
-
-      const x=offsetX+col*(actualCellW+actualGap);
-      const y=gridStartY+row*(actualCellH+actualGap);
-
-      drawPhotoCell(ctx,x,y,actualCellW,actualCellH,photo,cfg);
-      // Label below
-      if(photo.label){
-        const ly=y+actualCellH+6;
-        ctx.fillStyle=cfg.text;ctx.font='600 24px "PingFang SC","Microsoft YaHei",sans-serif';ctx.textAlign='center';
-        ctx.fillText(photo.label,x+actualCellW/2,ly+24);
-      }
-    }else{
-      col=i%3;
-      row=Math.floor(i/3);
-      const x=pad+col*(cellW+cellGap);
-      const y=gridStartY+row*(cellH+cellGap);
-      drawPhotoCell(ctx,x,y,cellW,cellH,photo,cfg);
-      // Label below
-      if(photo.label){
-        const ly=y+cellH+6;
-        ctx.fillStyle=cfg.text;ctx.font='600 24px "PingFang SC","Microsoft YaHei",sans-serif';ctx.textAlign='center';
-        ctx.fillText(photo.label,x+cellW/2,ly+24);
-      }
-    }
-  }
-
-  // --- Footer watermark ---
-  const footerY=cardH-30;
-  ctx.fillStyle=cfg.accent2;ctx.globalAlpha=0.6;
-  ctx.font='600 18px "PingFang SC","Microsoft YaHei",sans-serif';ctx.textAlign='center';
-  ctx.fillText('cosplan.top · 漫展集邮卡片',cardW/2,footerY);
-  ctx.globalAlpha=1;
-
-  // Generate blob
-  canvas.toBlob(blob=>{cardBlob=blob;},'image/jpeg',0.92);
-}
-
-function drawPhotoCell(ctx,x,y,w,h,photo,cfg){
-  // Photo background
-  ctx.fillStyle=cfg.photoBg;
-  ctx.beginPath();ctx.roundRect(x,y,w,h,12);ctx.fill();
-
-  // Clip to rounded rect
-  ctx.save();ctx.beginPath();ctx.roundRect(x+2,y+2,w-4,h-4,10);ctx.clip();
-  const img=photo.img;
-  const scale=Math.max(w/img.width,h/img.height);
-  const sw=img.width*scale,sh=img.height*scale;
-  const sx=(w-sw)/2,sy=(h-sh)/2;
-  // Try filter
-  try{ctx.filter=cfg.filter;ctx.drawImage(img,x+sx,y+sy,sw,sh);ctx.filter='none';}
-  catch(e){ctx.drawImage(img,x+sx,y+sy,sw,sh);}
-  ctx.restore();
-
-  // Border
-  ctx.strokeStyle=cfg.accent;ctx.lineWidth=2;ctx.globalAlpha=0.4;
-  ctx.beginPath();ctx.roundRect(x,y,w,h,12);ctx.stroke();
-  ctx.globalAlpha=1;
-
-  // Label on photo
-  if(photo.label){
-    ctx.fillStyle=cfg.labelBg;
-    const labelPad=8,labelH=28;
-    ctx.beginPath();ctx.roundRect(x+4,y+h-labelH-4,w-8,labelH,8);ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='600 18px "PingFang SC","Microsoft YaHei",sans-serif';ctx.textAlign='center';
-    ctx.fillText(photo.label,x+w/2,y+h-labelH/2+6);
-    ctx.textAlign='start';
-  }
-}
-
-// --- Caption ---
-function updateCaption(){
-  const labels=photos.map(p=>p.label||'???').filter(Boolean);
-  const event=$('eventName').value.trim()||'漫展';
-  const date=$('eventDate').value||new Date().toISOString().slice(0,10);
-  const lstr=labels.slice(0,5).join('、')+(labels.length>5?'等':'');
-  const cs=[
-    `${date} ${event} · 今日集邮：${lstr} ✨ 终于集齐了！`,
-    `#漫展集邮 #${event.replace(/\s/g,'')} 今天遇到的coser都好棒！${lstr} 🎉`,
-    `${event}一日游～集到了${lstr}！开心到飞起 📸`,
-  ];
-  $('captionText').textContent=cs[Math.floor(Math.random()*cs.length)];
-}
-
-function copyCaption(){
-  const t=$('captionText').textContent;
-  navigator.clipboard.writeText(t).then(()=>showToast('✅ 已复制！')).catch(()=>showToast('📋 请长按文案手动复制'));
-}
-
-function downloadCard(){
-  if(!cardBlob)return;
-  const url=URL.createObjectURL(cardBlob),a=document.createElement('a');
-  const ev=$('eventName').value.trim()||'漫展';
-  a.href=url;a.download=`集邮卡片_${ev}_Cosplan.jpg`;document.body.appendChild(a);a.click();
-  document.body.removeChild(a);URL.revokeObjectURL(url);
-  showToast('💾 卡片已保存！');
-}
-
-function shareCard(){
-  downloadForShare();
-  if(navigator.share&&cardBlob){
-    const file=new File([cardBlob],'集邮卡片.jpg',{type:'image/jpeg'});
-    navigator.share({title:'Cosplan 集邮卡片',text:$('captionText').textContent,files:[file]}).catch(()=>{});
-  }else{downloadCard();}
-}
-
-function downloadForShare(){
-  const canvas=$('resultCanvas');
-  canvas.toBlob(blob=>{cardBlob=blob;},'image/jpeg',0.92);
-}
-
-function resetAll(){
-  photos=[];cardBlob=null;currentStyle='pink';
-  $('charNames').value='';$('eventName').value='';$('eventDate').value='';
-  refreshSlots();updateGenerateBtn();
-  document.querySelectorAll('#styleRow .style-chip').forEach(c=>c.classList.toggle('active',c.dataset.style==='pink'));
-  $('stepPreview').classList.remove('active');$('stepUpload').classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function showToast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
-
-// --- Date default ---
-$('eventDate').value=new Date().toISOString().slice(0,10);
-
-// --- roundRect polyfill ---
-if(!CanvasRenderingContext2D.prototype.roundRect){
-  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
-    if(typeof r==='number')r={tl:r,tr:r,br:r,bl:r};
-    this.beginPath();this.moveTo(x+r.tl,y);this.lineTo(x+w-r.tr,y);this.quadraticCurveTo(x+w,y,x+w,y+r.tr);
-    this.lineTo(x+w,y+h-r.br);this.quadraticCurveTo(x+w,y+h,x+w-r.br,y+h);
-    this.lineTo(x+r.bl,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r.bl);
-    this.lineTo(x,y+r.tl);this.quadraticCurveTo(x,y,x+r.tl,y);this.closePath();
-  };
-}
+renderAll();
 </script>
 </body>
 </html>
