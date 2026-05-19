@@ -791,7 +791,7 @@
 
   <!-- 空状态（默认） -->
   <div class="empty-state" id="emptyState">
-    <span class="empty-icon">🎌</span>
+    <span class="empty-icon">🎭</span>
     <div class="empty-title">输入角色名，一键出片</div>
     <div class="empty-desc">
       Pose 参考图 · 滤镜预设 · 发布文案<br>
@@ -826,7 +826,7 @@
       </div>
       <div class="filter-card" onclick="applyFilter('anime')">
         <div class="filter-preview anime">🌸</div>
-        <div class="filter-name">日系胶片</div>
+        <div class="filter-name">柔光胶片</div>
       </div>
     </div>
     <div style="font-size:12px;color:var(--text-secondary);margin-top:8px;text-align:center;">
@@ -1040,7 +1040,7 @@
 
   // 滤镜 - 模拟
   function applyFilter(type) {
-    const names = { warm: '暖调动漫', cool: '冷调高级', anime: '日系胶片' };
+    const names = { warm: '暖调动漫', cool: '冷调高级', anime: '柔光胶片' };
     showToast('🎨 已套用「' + names[type] + '」滤镜');
   }
 
