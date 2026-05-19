@@ -3,327 +3,426 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cosplan · 社恐救星</title>
+  <title>Cosplan · 角色快诊</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>
     :root {
-      --pink: #ff6b9d; --purple: #7c3aed; --bg: #0d0614;
-      --card: rgba(255,255,255,0.06); --text: #fff; --sub: rgba(255,255,255,0.5);
-      --radius: 18px; --radius-sm: 12px;
+      --pink:#ff6b9d;--purple:#7c3aed;--bg:#0d0614;--card:rgba(255,255,255,0.06);
+      --text:#fff;--sub:rgba(255,255,255,0.5);--radius:18px;--radius-sm:12px;
     }
-    * { margin:0;padding:0;box-sizing:border-box; }
-    body {
-      font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
       background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;
       -webkit-font-smoothing:antialiased;display:flex;justify-content:center;
     }
-    .app { width:100%;max-width:480px;padding:0 16px 80px;position:relative;z-index:1; }
+    .app{width:100%;max-width:480px;padding:0 16px 80px;position:relative;z-index:1}
+    .header{text-align:center;padding:40px 0 20px}
+    .logo{font-size:40px}
+    .title{font-size:26px;font-weight:800;margin:6px 0 4px;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .subtitle{font-size:13px;color:var(--sub)}
+    .subtitle span{color:#ff9ec4;font-weight:600}
 
-    .header { text-align:center;padding:44px 0 20px; }
-    .logo { font-size:40px; }
-    .title { font-size:26px;font-weight:800;margin:6px 0 4px;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
-    .subtitle { font-size:13px;color:var(--sub); }
-    .subtitle span { color:#ff9ec4;font-weight:600; }
+    .view{display:none}
+    .view.active{display:block}
 
-    /* Mission cards */
-    .mission-grid { display:flex;flex-direction:column;gap:10px;margin-top:20px; }
-    .mission {
-      background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:18px 16px;
-      cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent;
-      display:flex;align-items:center;gap:14px;
+    /* Form */
+    .form-section{margin-bottom:20px}
+    .form-label{font-size:14px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .form-hint{font-size:11px;color:var(--sub);font-weight:400;margin-left:auto}
+
+    .chip-row{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{
+      padding:10px 18px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;
+      border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);
+      color:rgba(255,255,255,0.55);transition:all 0.15s;-webkit-tap-highlight-color:transparent;
+      user-select:none;
     }
-    .mission:active { border-color:var(--pink);background:rgba(255,107,157,0.08); }
-    .mission-icon { font-size:36px;flex-shrink:0; }
-    .mission-info { flex:1;min-width:0; }
-    .mission-name { font-size:16px;font-weight:700;margin-bottom:3px; }
-    .mission-desc { font-size:12px;color:var(--sub);line-height:1.5; }
-    .mission-arrow { font-size:18px;color:var(--sub);flex-shrink:0; }
+    .chip.active{background:rgba(255,107,157,0.18);border-color:var(--pink);color:#ff9ec4}
+    .chip:active{transform:scale(0.96)}
 
-    /* Detail view */
-    .back-btn {
+    .btn-primary{
+      width:100%;height:54px;background:linear-gradient(135deg,var(--pink),var(--purple));
+      color:#fff;border:none;border-radius:var(--radius-sm);font-size:17px;font-weight:700;
+      cursor:pointer;letter-spacing:1px;margin-top:20px;transition:all 0.15s;
+    }
+    .btn-primary:active{transform:scale(0.97);opacity:0.9}
+    .btn-primary:disabled{opacity:0.35;transform:none;cursor:not-allowed}
+
+    /* Result */
+    .result-header{text-align:center;padding:16px 0}
+    .result-header .match-label{font-size:13px;color:var(--sub);margin-bottom:4px}
+    .result-header .match-count{font-size:42px;font-weight:800;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .result-header .match-sub{font-size:13px;color:var(--sub)}
+
+    .char-card{
+      background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:18px;
+      margin-bottom:12px;position:relative;overflow:hidden;
+    }
+    .char-card.premium{opacity:0.5;filter:blur(4px);pointer-events:none}
+    .char-rank{
+      position:absolute;top:0;right:16px;font-size:56px;font-weight:800;
+      color:rgba(255,255,255,0.03);line-height:1;pointer-events:none;
+    }
+    .char-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+    .char-avatar{
+      width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+      font-size:28px;background:rgba(255,107,157,0.12);
+    }
+    .char-info{flex:1}
+    .char-name{font-size:18px;font-weight:700}
+    .char-series{font-size:12px;color:var(--sub)}
+    .char-match{
+      font-size:14px;font-weight:800;color:#ff9ec4;
+      background:rgba(255,107,157,0.12);padding:4px 10px;border-radius:10px;
+    }
+    .char-why{
+      font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:12px;
+      background:rgba(255,255,255,0.03);padding:10px 12px;border-radius:var(--radius-sm);
+    }
+    .char-why strong{color:rgba(255,255,255,0.7)}
+    .char-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+    .char-tag{
+      font-size:11px;font-weight:600;padding:4px 10px;border-radius:10px;
+      background:rgba(124,58,237,0.1);color:#a78bfa;
+    }
+    .char-tag.pink{background:rgba(255,107,157,0.1);color:#ff9ec4}
+    .char-tag.green{background:rgba(16,185,129,0.1);color:#34d399}
+    .char-tag.orange{background:rgba(245,158,11,0.1);color:#f59e0b}
+
+    .char-cost{display:flex;gap:16px;font-size:13px;color:var(--sub)}
+    .char-cost span{color:rgba(255,255,255,0.7);font-weight:600}
+
+    .lock-banner{
+      text-align:center;padding:32px 16px;margin:20px 0;
+      background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.15);
+      border-radius:var(--radius);
+    }
+    .lock-banner .lock-icon{font-size:36px;margin-bottom:8px}
+    .lock-banner .lock-title{font-size:16px;font-weight:700;margin-bottom:6px}
+    .lock-banner .lock-desc{font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:14px}
+    .btn-unlock{
+      display:inline-flex;align-items:center;gap:6px;padding:12px 28px;
+      background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;
+      border:none;border-radius:24px;font-size:15px;font-weight:700;cursor:pointer;
+      letter-spacing:1px;
+    }
+    .btn-unlock:active{transform:scale(0.96)}
+
+    .back-btn{
       display:flex;align-items:center;gap:6px;font-size:14px;color:var(--sub);
       cursor:pointer;margin-bottom:16px;padding:4px 0;-webkit-tap-highlight-color:transparent;
     }
-    .back-btn:active { color:var(--pink); }
+    .back-btn:active{color:var(--pink)}
 
-    .mission-hero { text-align:center;padding:12px 0 20px; }
-    .mission-hero .icon { font-size:64px;display:block;margin-bottom:8px; }
-    .mission-hero .name { font-size:22px;font-weight:800; }
-    .mission-hero .pain { font-size:14px;color:#ff9ec4;margin-top:4px;font-weight:600; }
-
-    /* Flow steps */
-    .flow { counter-reset:step;display:flex;flex-direction:column;gap:14px; }
-    .flow-step {
-      background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);padding:18px 16px;
-      position:relative;overflow:hidden;
-    }
-    .flow-step::before {
-      counter-increment:step;content:counter(step);
-      position:absolute;top:12px;right:16px;font-size:48px;font-weight:800;
-      color:rgba(255,255,255,0.03);line-height:1;pointer-events:none;
-    }
-    .flow-step-header { display:flex;align-items:center;gap:8px;margin-bottom:10px; }
-    .flow-step-tag {
-      font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;
-      background:rgba(255,107,157,0.15);color:#ff9ec4;text-transform:uppercase;letter-spacing:0.5px;
-    }
-    .flow-step-tag.yellow { background:rgba(245,158,11,0.15);color:#f59e0b; }
-    .flow-step-tag.green { background:rgba(16,185,129,0.15);color:#34d399; }
-    .flow-step-tag.purple { background:rgba(124,58,237,0.15);color:#a78bfa; }
-    .flow-step-title { font-size:14px;font-weight:700;color:rgba(255,255,255,0.8); }
-
-    .script-box {
-      background:rgba(255,255,255,0.04);border-radius:var(--radius-sm);padding:14px 16px;
-      margin:10px 0;position:relative;
-    }
-    .script-label { font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px; }
-    .script-text { font-size:15px;line-height:1.7;color:rgba(255,255,255,0.9); }
-    .script-text em { font-style:normal;color:#ff9ec4;font-weight:600; }
-    .script-tip { font-size:12px;color:var(--sub);margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);line-height:1.5; }
-    .script-tip::before { content:'💡 '; }
-
-    .btn-copy {
-      display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;
-      padding:8px 18px;border-radius:20px;cursor:pointer;border:none;
-      background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;
-      transition:all 0.15s;letter-spacing:0.5px;margin-top:6px;
-    }
-    .btn-copy:active { transform:scale(0.96);opacity:0.85; }
-    .btn-copy.copied { background:#10b981; }
-
-    .psych-box {
-      background:rgba(124,58,237,0.08);border-left:3px solid var(--purple);
-      border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 14px;margin-top:10px;
-    }
-    .psych-box .label { font-size:10px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px; }
-    .psych-box .text { font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5; }
-
-    .red-flag {
-      background:rgba(239,68,68,0.08);border-left:3px solid #ef4444;
-      border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 14px;margin-top:10px;
-    }
-    .red-flag .label { font-size:10px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px; }
-    .red-flag .text { font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5; }
-
-    .toast {
+    .toast{
       position:fixed;top:50px;left:50%;transform:translateX(-50%);z-index:200;
       background:var(--purple);color:#fff;padding:10px 24px;border-radius:30px;
       font-size:14px;font-weight:600;opacity:0;transition:opacity 0.3s;pointer-events:none;
     }
-    .toast.show { opacity:1; }
+    .toast.show{opacity:1}
+    .footer{text-align:center;padding:24px 0;color:rgba(255,255,255,0.15);font-size:12px}
 
-    .footer { text-align:center;padding:24px 0;color:rgba(255,255,255,0.15);font-size:12px; }
-    .bg-decor { position:fixed;top:-120px;right:-120px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,157,0.05),transparent 70%);pointer-events:none;z-index:0; }
-    .bg-decor2 { position:fixed;bottom:-100px;left:-100px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,0.05),transparent 70%);pointer-events:none;z-index:0; }
-
-    .view { display:none; }
-    .view.active { display:block; }
+    .bg-decor{position:fixed;top:-120px;right:-120px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,157,0.05),transparent 70%);pointer-events:none;z-index:0}
+    .bg-decor2{position:fixed;bottom:-100px;left:-100px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,0.05),transparent 70%);pointer-events:none;z-index:0}
   </style>
 </head>
 <body>
-  <div class="bg-decor"></div><div class="bg-decor2"></div>
+<div class="bg-decor"></div><div class="bg-decor2"></div>
 
-  <div class="app">
-    <!-- Home -->
-    <div class="view active" id="homeView">
-      <header class="header">
-        <div class="logo">🦸</div>
-        <div class="title">社恐救星</div>
-        <p class="subtitle">漫展社交全攻略 · <span>不再站在原地纠结</span></p>
-      </header>
+<div class="app">
+  <!-- Home -->
+  <div class="view active" id="homeView">
+    <header class="header">
+      <div class="logo">🔮</div>
+      <div class="title">角色快诊</div>
+      <p class="subtitle">找到天生适合你的角色 · <span>告别 OOC 焦虑</span></p>
+    </header>
 
-      <div class="mission-grid" id="missionGrid"></div>
-      <div class="footer">Cosplan · cosplan.top</div>
+    <div class="form-section">
+      <div class="form-label">📏 你的身高 <span class="form-hint">选最接近的</span></div>
+      <div class="chip-row" id="heightRow"></div>
     </div>
 
-    <!-- Detail -->
-    <div class="view" id="detailView">
-      <div class="back-btn" onclick="goHome()">← 返回</div>
-      <div class="mission-hero" id="missionHero"></div>
-      <div class="flow" id="flowSteps"></div>
-      <div class="footer">Cosplan · cosplan.top</div>
+    <div class="form-section">
+      <div class="form-label">🏃 身材类型</div>
+      <div class="chip-row" id="buildRow"></div>
     </div>
+
+    <div class="form-section">
+      <div class="form-label">😶 脸型</div>
+      <div class="chip-row" id="faceRow"></div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-label">🎭 想出的性别</div>
+      <div class="chip-row" id="genderRow"></div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-label">💰 预算范围</div>
+      <div class="chip-row" id="budgetRow"></div>
+    </div>
+
+    <button class="btn-primary" id="btnDiagnose" disabled>🔮 开始诊断</button>
+    <div class="footer">Cosplan · cosplan.top</div>
   </div>
 
-  <div class="toast" id="toast"></div>
+  <!-- Result -->
+  <div class="view" id="resultView">
+    <div class="back-btn" onclick="goHome()">← 重新诊断</div>
+    <div class="result-header">
+      <div class="match-label">你的专属匹配</div>
+      <div class="match-count" id="matchCount">0</div>
+      <div class="match-sub">个角色天生适合你</div>
+    </div>
+    <div id="resultList"></div>
+    <div class="footer">Cosplan · cosplan.top</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════ DATA ═══════════════════════════════
-const missions = [
-  {
-    id:'jyp', icon:'📸', name:'找 Coser 集邮', desc:'看到喜欢的角色不敢开口？从搭话到合影到加好友，全程脚本',
-    pain:'最常见的社死现场',
-    flow:[
-      {tag:'准备',tagType:'yellow',title:'接近前 3 秒',scripts:[
-        {text:'深呼吸一次。记住：对方也是来玩的，<em>被夸只会开心，不会觉得你烦</em>。',tip:'紧张是正常的，但你的紧张跟对方的反应无关——你还没开口，对方根本不知道你要干嘛。'}
-      ]},
-      {tag:'开口',tagType:'',title:'第一句话',scripts:[
-        {text:'「你好！我超喜欢<em>{角色}</em>的，可以跟你合个影吗？」',tip:'直接说喜欢+问合影。不用绕弯子——漫展上所有人都知道这是常规操作。用「超喜欢」而不是「喜欢」，多一个字的热情度差别很大。'}
-      ]},
-      {tag:'反馈',tagType:'green',title:'对方答应后',scripts:[
-        {text:'「谢谢！！」（拍照）→ 「太棒了谢谢你～」',tip:'拍完别转身就走，这比不开口还扣分。至少说声谢谢再走。'},
-        {text:'「拍得好好！你出这个角色太合适了～」',tip:'夸具体点会让人记住你。如果是同作品的，可以加一句「我也好喜欢这部！」'}
-      ]},
-      {tag:'加好友',tagType:'purple',title:'加联系方式（可选）',scripts:[
-        {text:'「可以加个微信吗？回头我把照片发你～」',tip:'用「发照片」做理由最自然。对方拒绝也完全正常，微笑说「没事没事」就可以走了。'},
-        {text:'「你微博/小红书是什么呀？我关注你！」',tip:'如果对方看起来是重度 coser，问社交账号比问微信更自然。'}
-      ]},
-      {tag:'避雷',tagType:'',title:'这些话千万别说',redFlags:[
-        '❌ 「你比原版好看！」→ 拉踩角色容易冒犯人',
-        '❌ 不要评论对方的服装质量或身材',
-        '❌ 不要未经允许碰对方的道具或假发',
-      ]},
-    ]
-  },
-  {
-    id:'photog', icon:'📷', name:'找摄影师约拍', desc:'想拍正片但不知道怎么跟摄影师沟通？从约拍到选片，手把手教你',
-    pain:'想拍好照片但张不开嘴',
-    flow:[
-      {tag:'准备',tagType:'yellow',title:'找对人',scripts:[
-        {text:'观察对方：手里没拿相机的不叫；正在给别人拍的不插队；<em>拍完正在回看照片的时机最好</em>。',tip:'等对方拍完上一组，整理装备的时候上去问，成功率最高。'}
-      ]},
-      {tag:'开口',tagType:'',title:'第一句话',scripts:[
-        {text:'「老师你好，请问你现在有空吗？我出的是<em>{角色}</em>，想请你帮我拍几张～」',tip:'叫「老师」是圈内对摄影师的尊称，显得你懂行。说「几张」而不是「一套正片」，降低对方的心理压力。'},
-        {text:'「哈喽～可以蹭几张吗？随便按按就行，不用修图的！」',tip:'「蹭几张」是黑话，意思是随便拍拍不要求质量。对方答应率极高。'}
-      ]},
-      {tag:'配合',tagType:'green',title:'拍摄中怎么配合',scripts:[
-        {text:'主动说「我不知道摆什么 pose，你指挥我就行！」',tip:'你最怕尴尬，摄影师也怕你不配合。主动把主导权交出去，双方都轻松。'},
-        {text:'每拍完几个角度，说一句「好的！」或者点头。',tip:'给摄影师正反馈很重要——沉默会让对方怀疑自己拍得不好。'}
-      ]},
-      {tag:'收尾',tagType:'purple',title:'拍完后怎么说',scripts:[
-        {text:'「谢谢你！方便加个微信吗？回头传照片给我就行，不着急～」',tip:'别说「修完发我」，说「传照片给我就行」——不预设对方会帮你修，更尊重。'},
-        {text:'「拍得好好！我微博是<em>{账号}</em>，发了可以艾特我！」',tip:'主动提供社交账号，方便对方@你，也可能帮涨粉。'}
-      ]},
-    ]
-  },
-  {
-    id:'hair', icon:'💇', name:'找毛娘/妆娘', desc:'不知道怎么开口问价格、约时间？从询价到确认，全套模板',
-    pain:'想问又怕被宰',
-    flow:[
-      {tag:'准备',tagType:'yellow',title:'询价前先做功课',scripts:[
-        {text:'提前准备好：<em>角色名、参考图、漫展日期、你的预算范围</em>。',tip:'带参考图去问比空口说「XX角色」清楚 10 倍。预算不用精确，但心里要有个范围。'}
-      ]},
-      {tag:'开口',tagType:'',title:'询价模板',scripts:[
-        {text:'「你好，请问接<em>{角色}</em>的造型吗？{日期}的展，方便报个价吗？我带了参考图给你看～」',tip:'一次性说清角色+时间+需求，给对方省事。加「带了参考图」体现你是做了准备的，不是随便问问。'},
-        {text:'「你好～想约<em>{角色}</em>的毛，你这边工期大概多久呀？有什么需要注意的吗？」',tip:'问工期是实际需求，问「注意事项」是给对方展示专业度的机会——毛娘会觉得你尊重她的专业性。'}
-      ]},
-      {tag:'确认',tagType:'green',title:'确认订单',scripts:[
-        {text:'「好的，那就定{日期}的{角色}造型，费用{金额}。我先付定金，展前一周再确认细节可以吗？」',tip:'主动提定金→体现诚意；预留确认时间→避免展前手忙脚乱。'}
-      ]},
-      {tag:'避雷',tagType:'',title:'这些话别说',redFlags:[
-        '❌ 「能不能便宜点」→ 可以问「有不同价位吗」',
-        '❌ 「我看别人家才 XX 钱」→ 比价是大忌',
-        '❌ 不要催「来得及吗来不及吗」反复问',
-      ]},
-    ]
-  },
-  {
-    id:'social', icon:'📞', name:'漫展后怎么聊', desc:'加了好友不知道怎么开口？从第一次发消息到约下次展，社交破冰指南',
-    pain:'加了好友然后躺列',
-    flow:[
-      {tag:'准备',tagType:'yellow',title:'加好友当天晚上',scripts:[
-        {text:'当天晚上就发，不要拖。过了 48 小时再发就不自然了。',tip:'漫展当天是情绪最高点，趁热打铁效果最好。'}
-      ]},
-      {tag:'开口',tagType:'',title:'第一句话',scripts:[
-        {text:'「今天漫展超开心的！我刚把照片整理了一下，你的<em>{角色}</em>真的太绝了✨」',tip:'用漫展的开心情绪开场 + 夸对方的角色。两个都是安全话题，不会让对方尴尬。'},
-        {text:'「今天谢谢你跟我合影！你的<em>{角色}</em>是我今天看到还原度最高的！」',tip:'具体夸还原度比笼统夸好看更走心。'}
-      ]},
-      {tag:'延续',tagType:'green',title:'自然延续话题',scripts:[
-        {text:'「你下次还去哪个展呀？我可能去<em>{下次漫展}</em>～」',tip:'问下次展是漫展圈最自然的延续话题，比问「你平时干嘛」自然得多。'},
-        {text:'「对了你那个道具/假发是哪家的呀？质感好好！」',tip:'问装备信息——对方会乐意分享，而且话题可以聊很久。'}
-      ]},
-      {tag:'升级',tagType:'purple',title:'约下次一起',scripts:[
-        {text:'「<em>{下次漫展}</em>我也去！到时候可以一起逛吗？我可以帮你拎包（bushi）」',tip:'后半句带点玩笑感，降低邀约的严肃性。被拒绝也不尴尬。'},
-        {text:'「下次展子有机会再集邮！想跟你拍个同作品合影～」',tip:'提前种下「同作品合影」的期待，比单纯说「再约」更具体。'}
-      ]},
-    ]
-  },
+// ═══════ DATA ═══════
+const options = {
+  height: [
+    {v:'short',label:'155cm 以下',icon:'📏'},
+    {v:'mid-low',label:'155-165cm',icon:'📏'},
+    {v:'mid',label:'165-175cm',icon:'📏'},
+    {v:'mid-high',label:'175-185cm',icon:'📏'},
+    {v:'tall',label:'185cm 以上',icon:'📏'},
+  ],
+  build: [
+    {v:'slim',label:'偏瘦',icon:'🏃'},
+    {v:'average',label:'标准',icon:'🏃'},
+    {v:'athletic',label:'有肌肉',icon:'🏃'},
+    {v:'soft',label:'偏圆润',icon:'🏃'},
+  ],
+  face: [
+    {v:'round',label:'圆脸',icon:'😶'},
+    {v:'oval',label:'鹅蛋脸',icon:'😶'},
+    {v:'square',label:'方脸',icon:'😶'},
+    {v:'long',label:'长脸',icon:'😶'},
+    {v:'heart',label:'心形脸',icon:'😶'},
+  ],
+  gender: [
+    {v:'female',label:'女性角色',icon:'👩'},
+    {v:'male',label:'男性角色',icon:'👨'},
+    {v:'any',label:'不限',icon:'🎭'},
+  ],
+  budget: [
+    {v:'low',label:'500 以内',icon:'💰'},
+    {v:'mid',label:'500-2000',icon:'💰'},
+    {v:'high',label:'2000+',icon:'💰'},
+    {v:'any',label:'不限预算',icon:'💰'},
+  ],
+};
+
+let selected = {height:null,build:null,face:null,gender:null,budget:null};
+
+// Character database
+const characters = [
+  // Female - short/slim
+  {name:'蕾姆',series:'Re:从零开始的异世界生活',gender:'female',height:'mid-low',build:'slim',face:'round',cost:'low',complexity:'低',tags:['女仆装','短发','经典']},
+  {name:'血小板',series:'工作细胞',gender:'female',height:'short',build:'slim',face:'round',cost:'low',complexity:'低',tags:['制服','可爱','低门槛']},
+  {name:'甘露寺蜜璃',series:'鬼灭之刃',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['和服','长发','人气']},
+  {name:'时崎狂三',series:'约会大作战',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['哥特','双马尾','经典']},
+  {name:'02',series:'DARLING in the FRANXX',gender:'female',height:'mid',build:'slim',face:'oval',cost:'low',complexity:'低',tags:['紧身衣','粉发','人气']},
+  {name:'薇尔莉特',series:'紫罗兰永恒花园',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['洋装','金发','精致']},
+  
+  // Female - mid/average
+  {name:'蝴蝶忍',series:'鬼灭之刃',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['和服','蝴蝶发饰','优雅']},
+  {name:'亚丝娜',series:'刀剑神域',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['战斗服','长发','经典']},
+  {name:'楪祈',series:'罪恶王冠',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['歌姬','粉发','经典']},
+  {name:'Saber',series:'Fate系列',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['铠甲','金发','经典']},
+  {name:'艾米莉亚',series:'Re:从零开始的异世界生活',gender:'female',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['精灵','银发','优雅']},
+  {name:'五更琉璃',series:'我的妹妹不可能这么可爱',gender:'female',height:'mid-low',build:'slim',face:'round',cost:'low',complexity:'低',tags:['哥特','黑长直','经典']},
+  
+  // Female - tall/slim
+  {name:'三笠·阿克曼',series:'进击的巨人',gender:'female',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',tags:['军装','短发','飒']},
+  {name:'八重神子',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['和风','粉发','精致']},
+  {name:'雷电将军',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['和风','紫发','华丽']},
+  {name:'纳西妲',series:'原神',gender:'female',height:'short',build:'slim',face:'round',cost:'mid',complexity:'中',tags:['精灵','可爱','低门槛']},
+  
+  // Female - soft/round build
+  {name:'我妻善逸',series:'鬼灭之刃',gender:'male',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['和服','金发','人气']},
+  {name:'康娜',series:'小林家的龙女仆',gender:'female',height:'short',build:'soft',face:'round',cost:'low',complexity:'低',tags:['可爱','日常','低门槛']},
+  {name:'托尔',series:'小林家的龙女仆',gender:'female',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['女仆','龙角','可爱']},
+  
+  // Male - mid/slim
+  {name:'五条悟',series:'咒术回战',gender:'male',height:'mid-high',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['制服','白毛','人气']},
+  {name:'炭治郎',series:'鬼灭之刃',gender:'male',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',tags:['和服','日轮刀','经典']},
+  {name:'利威尔',series:'进击的巨人',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['军装','短发','人气']},
+  {name:'太宰治',series:'文豪野犬',gender:'male',height:'mid',build:'slim',face:'oval',cost:'low',complexity:'低',tags:['风衣','绷带','低门槛']},
+  {name:'金木研',series:'东京食尸鬼',gender:'male',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['面具','白发','经典']},
+  
+  // Male - tall/athletic
+  {name:'灶门炭治郎',series:'鬼灭之刃',gender:'male',height:'mid',build:'athletic',face:'square',cost:'mid',complexity:'中',tags:['和服','日轮刀','热血']},
+  {name:'宇智波佐助',series:'火影忍者',gender:'male',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['忍者','黑发','经典']},
+  {name:'漩涡鸣人',series:'火影忍者',gender:'male',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',tags:['忍者','金发','经典']},
+  {name:'艾伦·耶格尔',series:'进击的巨人',gender:'male',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',tags:['军装','棕发','人气']},
+  
+  // Male - tall
+  {name:'杀生丸',series:'犬夜叉',gender:'male',height:'mid-high',build:'slim',face:'long',cost:'mid',complexity:'中',tags:['和服','银发','高冷']},
+  {name:'中原中也',series:'文豪野犬',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'low',complexity:'低',tags:['西装','帽子','低门槛']},
+  {name:'钟离',series:'原神',gender:'male',height:'mid-high',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['中式','西装','华丽']},
+  {name:'达达利亚',series:'原神',gender:'male',height:'mid-high',build:'athletic',face:'oval',cost:'high',complexity:'高',tags:['战斗服','橙发','华丽']},
+  
+  // More diverse
+  {name:'灶门祢豆子',series:'鬼灭之刃',gender:'female',height:'mid-low',build:'slim',face:'round',cost:'mid',complexity:'中',tags:['和服','竹筒','可爱']},
+  {name:'胡桃',series:'原神',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['中式','双马尾','活泼']},
+  {name:'刻晴',series:'原神',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['中式','紫发','干练']},
+  {name:'甘雨',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['中式','蓝发','仙气']},
+  {name:'魈',series:'原神',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['中式','绿发','冷酷']},
+  {name:'散兵',series:'原神',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['和风','紫发','人气']},
+  
+  // Additional popular
+  {name:'缠流子',series:'KILL la KILL',gender:'female',height:'mid',build:'athletic',face:'oval',cost:'low',complexity:'低',tags:['战斗服','短发','热血']},
+  {name:'木之本樱',series:'魔卡少女樱',gender:'female',height:'short',build:'slim',face:'round',cost:'mid',complexity:'中',tags:['魔法少女','可爱','经典']},
+  {name:'阿尼亚',series:'间谍过家家',gender:'female',height:'short',build:'slim',face:'round',cost:'low',complexity:'低',tags:['日常','粉发','超人气']},
+  {name:'约尔',series:'间谍过家家',gender:'female',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['日常','黑发','人气']},
+  {name:'黄昏',series:'间谍过家家',gender:'male',height:'mid-high',build:'athletic',face:'square',cost:'low',complexity:'低',tags:['西装','金发','低门槛']},
 ];
 
-// ═══════════════════════════ UI ═══════════════════════════════
-function buildMissions() {
-  const grid = document.getElementById('missionGrid');
-  grid.innerHTML = missions.map(m => `
-    <div class="mission" onclick="openMission('${m.id}')">
-      <div class="mission-icon">${m.icon}</div>
-      <div class="mission-info">
-        <div class="mission-name">${m.name}</div>
-        <div class="mission-desc">${m.desc}</div>
-      </div>
-      <div class="mission-arrow">→</div>
-    </div>
+// ═══════ UI ═══════
+function buildChips(rowId, opts, key) {
+  const row = document.getElementById(rowId);
+  row.innerHTML = opts.map(o => `
+    <div class="chip" data-v="${o.v}" onclick="selectChip('${key}','${o.v}',this)">${o.icon} ${o.label}</div>
   `).join('');
 }
 
-function openMission(id) {
-  const m = missions.find(x => x.id === id);
-  if (!m) return;
+['height','build','face','gender','budget'].forEach(k => {
+  buildChips(k+'Row', options[k], k);
+});
+
+function selectChip(key, val, el) {
+  selected[key] = val;
+  document.querySelectorAll(`#${key}Row .chip`).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  updateBtn();
+}
+
+function updateBtn() {
+  const all = Object.values(selected).every(v => v !== null);
+  document.getElementById('btnDiagnose').disabled = !all;
+}
+
+// ═══════ MATCHING ═══════
+function scoreChar(char) {
+  let score = 0, reasons = [];
+  
+  if (selected.gender !== 'any') {
+    if (char.gender === selected.gender) { score += 30; reasons.push('性别匹配'); }
+    else score -= 50;
+  }
+  
+  if (char.height === selected.height) { score += 25; reasons.push('身高完美匹配'); }
+  else {
+    const hOrder = ['short','mid-low','mid','mid-high','tall'];
+    const diff = Math.abs(hOrder.indexOf(char.height) - hOrder.indexOf(selected.height));
+    if (diff === 1) { score += 15; reasons.push('身高接近'); }
+    else if (diff === 2) score += 5;
+  }
+  
+  if (char.build === selected.build) { score += 20; reasons.push('体型天生契合'); }
+  else if (
+    (char.build === 'average' && selected.build === 'slim') ||
+    (char.build === 'slim' && selected.build === 'average')
+  ) { score += 10; reasons.push('体型相近'); }
+  
+  if (char.face === selected.face) { score += 15; reasons.push('脸型匹配'); }
+  else {
+    const faceCompat = {round:['oval'],oval:['round','heart'],heart:['oval'],square:['oval','long'],long:['oval','square']};
+    if (faceCompat[selected.face]?.includes(char.face)) { score += 8; reasons.push('脸型兼容'); }
+  }
+  
+  if (selected.budget !== 'any') {
+    if (char.cost === selected.budget) { score += 10; reasons.push('预算匹配'); }
+    else if (char.cost === 'low' && selected.budget !== 'low') { score += 5; }
+    else if (selected.budget === 'low' && char.cost !== 'low') score -= 5;
+  }
+  
+  return {score,reasons};
+}
+
+function diagnose() {
+  const results = characters.map(char => ({
+    ...char,
+    ...scoreChar(char)
+  })).filter(c => c.score > 0)
+    .sort((a,b) => b.score - a.score);
 
   document.getElementById('homeView').classList.remove('active');
-  document.getElementById('detailView').classList.add('active');
+  document.getElementById('resultView').classList.add('active');
+  document.getElementById('matchCount').textContent = results.length;
 
-  document.getElementById('missionHero').innerHTML = `
-    <span class="icon">${m.icon}</span>
-    <div class="name">${m.name}</div>
-    <div class="pain">"${m.pain}"</div>
-  `;
-
-  document.getElementById('flowSteps').innerHTML = m.flow.map(step => `
-    <div class="flow-step">
-      <div class="flow-step-header">
-        <span class="flow-step-tag ${step.tagType||''}">${step.tag}</span>
-        <span class="flow-step-title">${step.title}</span>
+  const list = document.getElementById('resultList');
+  list.innerHTML = results.map((c,i) => {
+    const isLocked = i >= 3;
+    const matchPct = Math.min(100, Math.round(c.score / 100 * 100));
+    return `
+      <div class="char-card${isLocked?' premium':''}" style="${isLocked?'':'--rank:'+(i+1)}">
+        <div class="char-rank">#${i+1}</div>
+        <div class="char-header">
+          <div class="char-avatar">${c.tags[0]==='可爱'?'🎀':c.tags[0]==='经典'?'⭐':c.tags[0]==='人气'?'🔥':c.tags[0]==='飒'?'⚔️':c.tags[0]==='优雅'?'💫':'✨'}</div>
+          <div class="char-info">
+            <div class="char-name">${c.name}</div>
+            <div class="char-series">${c.series}</div>
+          </div>
+          <div class="char-match">${matchPct}% 匹配</div>
+        </div>
+        <div class="char-why">
+          <strong>为什么适合你：</strong>${c.reasons.join(' · ')}
+        </div>
+        <div class="char-tags">
+          ${c.tags.map(t => {
+            const cls = t==='可爱'||t==='低门槛'?'pink':t==='经典'?'green':t==='华丽'||t==='精致'?'orange':'';
+            return `<span class="char-tag ${cls}">${t}</span>`;
+          }).join('')}
+          <span class="char-tag" style="background:rgba(255,255,255,0.05);color:var(--sub)">复杂度:${c.complexity}</span>
+        </div>
+        <div class="char-cost">
+          <span>💰 预估 <b>${c.cost==='low'?'500以内':c.cost==='mid'?'500-2000':'2000+'}</b></span>
+          ${!isLocked?`<span style="color:#ff9ec4;cursor:pointer;margin-left:auto;" onclick="showToast('🔒 详细出装清单为付费功能（开发中）')">📋 看出装清单 →</span>`:''}
+        </div>
       </div>
-      ${(step.scripts||[]).map(s => `
-        <div class="script-box">
-          <div class="script-label">💬 这样说</div>
-          <div class="script-text">${s.text}</div>
-          ${s.tip ? `<div class="script-tip">${s.tip}</div>` : ''}
-          <button class="btn-copy" onclick="copyText(this,\`${s.text.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`)">📋 复制这段话</button>
+    `;
+  }).join('');
+
+  // Lock banner
+  if (results.length > 3) {
+    list.innerHTML += `
+      <div class="lock-banner">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-title">解锁全部 ${results.length} 个角色</div>
+        <div class="lock-desc">
+          获取完整匹配列表 + 每个角色的详细出装清单<br>
+          含购买渠道推荐、省钱平替方案、OOC 避雷指南
         </div>
-      `).join('')}
-      ${step.psych ? `
-        <div class="psych-box">
-          <div class="label">🧠 为什么有用</div>
-          <div class="text">${step.psych}</div>
-        </div>
-      ` : ''}
-      ${(step.redFlags||[]).map(rf => `
-        <div class="red-flag">
-          <div class="label">⚠️ 避雷</div>
-          <div class="text">${rf}</div>
-        </div>
-      `).join('')}
-    </div>
-  `).join('');
+        <button class="btn-unlock" onclick="showToast('💰 9.9元解锁全部（支付功能开发中）')">✨ 9.9 解锁全部</button>
+      </div>
+    `;
+  }
 
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function goHome() {
-  document.getElementById('detailView').classList.remove('active');
+  document.getElementById('resultView').classList.remove('active');
   document.getElementById('homeView').classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function copyText(btn,text) {
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent='✅ 已复制';
-    btn.classList.add('copied');
-    showToast('✅ 已复制，去粘贴吧！');
-    setTimeout(()=>{btn.textContent='📋 复制这段话';btn.classList.remove('copied');},2000);
-  }).catch(()=>showToast('📋 请长按文字手动复制'));
-}
-
 function showToast(msg) {
-  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  const t = document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2000);
 }
 
-buildMissions();
+document.getElementById('btnDiagnose').addEventListener('click',diagnose);
 </script>
 </body>
 </html>
