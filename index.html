@@ -106,13 +106,15 @@
     }
     .char-card:hover .char-img{transform:scale(1.03)}
     .char-img-fallback{
-      width:100%;height:100%;display:flex;align-items:center;justify-content:center;
-      background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(255,107,157,0.1));
+      width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
       position:absolute;top:0;left:0;
     }
     .char-img-initial{
-      font-size:48px;font-weight:800;color:rgba(255,255,255,0.12);
-      -webkit-text-stroke:1px rgba(255,255,255,0.05);
+      font-size:64px;font-weight:800;color:rgba(255,255,255,0.25);
+      text-shadow:0 2px 20px rgba(0,0,0,0.5);line-height:1;
+    }
+    .char-img-label{
+      font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:2px;margin-top:4px;
     }
     
     .char-header{display:flex;align-items:center;gap:12px;margin-bottom:10px;position:relative;z-index:1}
@@ -470,6 +472,18 @@ const faceCompatibility = {
   long: {round:0,oval:10,square:10,heart:8,long:30},
 };
 
+// ═══════ SERIES COLOR PALETTE ═══════
+const seriesColors = {
+  'Re:从零开始':'135,180,255','鬼灭之刃':'34,211,238','约会大作战':'236,72,153',
+  'DARLING in the FRANXX':'239,68,68','紫罗兰永恒花园':'168,162,255','刀剑神域':'250,204,21',
+  'Fate系列':'59,130,246','俺妹':'168,85,247','进击的巨人':'168,162,158',
+  '原神':'251,191,36','小林家的龙女仆':'74,222,128','咒术回战':'129,140,248',
+  '文豪野犬':'71,85,105','火影忍者':'249,115,22','犬夜叉':'239,68,68',
+  '魔卡少女樱':'244,114,182','间谍过家家':'34,197,94','罪恶王冠':'217,70,239',
+  '东京食尸鬼':'139,92,246','工作细胞':'239,68,68',
+};
+const defaultColor = '124,58,237';
+
 function diagnose() {
   if (!faceData) return;
   const d = faceData;
@@ -525,15 +539,17 @@ function diagnose() {
   list.innerHTML = results.map((r,i) => {
     const c = r.char; const isLocked = i >= 3;
     const maxScore = 100; const matchPct = Math.min(99, Math.round(r.score / maxScore * 100));
-    const imgUrl = c.img ? `https://s4.anilist.co/file/anilistcdn/character/large/b${c.img}.jpg` : '';
+    const imgUrl = c.img ? `images/characters/${c.img}.jpg` : '';
     const costLabel = {low:'500以内','mid-low':'500-1000',mid:'1000-2000',high:'2000+'};
+    const sc = seriesColors[c.series] || defaultColor;
     return `
       <div class="char-card${isLocked?' premium':''}">
         <div class="char-rank">#${i+1}</div>
-        <div class="char-img-wrap">
+        <div class="char-img-wrap" style="background:radial-gradient(ellipse at 30% 20%,rgba(${sc},0.2),transparent 70%),linear-gradient(135deg,rgba(${sc},0.12),rgba(0,0,0,0.3))">
           ${c.img ? `<img class="char-img" src="${imgUrl}" alt="${c.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
           <div class="char-img-fallback"${c.img?' style="display:none"':''}>
-            <span class="char-img-initial">${c.name[0]}</span>
+            <span class="char-img-initial">${c.name}</span>
+            <span class="char-img-label">${c.series}</span>
           </div>
         </div>
         <div class="char-header">
