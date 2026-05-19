@@ -9,441 +9,131 @@
 
   <style>
     :root {
-      --pink: #ff6b9d;
-      --pink-light: #ffe0eb;
-      --purple: #7c3aed;
-      --purple-light: #ede9fe;
-      --bg: #0d0614;
-      --card: rgba(255,255,255,0.08);
-      --text: #fff;
-      --text-secondary: rgba(255,255,255,0.55);
-      --radius: 20px;
-      --radius-sm: 14px;
+      --pink: #ff6b9d; --pink-light: #ffe0eb; --purple: #7c3aed; --purple-light: #ede9fe;
+      --bg: #0d0614; --card: rgba(255,255,255,0.08); --text: #fff;
+      --text-secondary: rgba(255,255,255,0.55); --radius: 20px; --radius-sm: 14px;
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      min-height: 100dvh;
-      -webkit-font-smoothing: antialiased;
-      display: flex;
-      justify-content: center;
+      background: var(--bg); color: var(--text); min-height: 100vh; min-height: 100dvh;
+      -webkit-font-smoothing: antialiased; display: flex; justify-content: center;
     }
-
-    .app {
-      width: 100%;
-      max-width: 480px;
-      padding: 0 16px 120px;
-    }
-
-    /* ---- Header ---- */
-    .header {
-      text-align: center;
-      padding: 40px 0 24px;
-    }
-
-    .logo-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
+    .app { width: 100%; max-width: 480px; padding: 0 16px 120px; }
+    .header { text-align: center; padding: 40px 0 24px; }
+    .logo-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
     .logo-icon { font-size: 36px; line-height: 1; }
-    .logo-text {
-      font-size: 28px;
-      font-weight: 800;
-      background: linear-gradient(135deg, var(--pink), var(--purple));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .tagline {
-      font-size: 14px;
-      color: var(--text-secondary);
-    }
-
-    .tagline span {
-      background: rgba(255,107,157,0.2);
-      color: #ff9ec4;
-      padding: 2px 10px;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 12px;
-    }
-
-    /* ---- Steps ---- */
+    .logo-text { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, var(--pink), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .tagline { font-size: 14px; color: var(--text-secondary); }
+    .tagline span { background: rgba(255,107,157,0.2); color: #ff9ec4; padding: 2px 10px; border-radius: 20px; font-weight: 600; font-size: 12px; }
     .step { display: none; }
     .step.active { display: block; }
+    .step-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .step-card { background: var(--card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius); padding: 24px 20px; margin-bottom: 16px; }
 
-    .step-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .step-card {
-      background: var(--card);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: var(--radius);
-      padding: 24px 20px;
-      margin-bottom: 16px;
-    }
-
-    /* ---- Upload Zone ---- */
     .upload-zone {
-      border: 2px dashed rgba(255,255,255,0.2);
-      border-radius: var(--radius);
-      padding: 48px 20px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-      overflow: hidden;
+      border: 2px dashed rgba(255,255,255,0.25); border-radius: var(--radius); padding: 36px 20px;
+      text-align: center; cursor: pointer; transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+      background: rgba(255,255,255,0.03);
     }
-
-    .upload-zone:active { border-color: var(--pink); background: rgba(255,107,157,0.08); }
-
-    .upload-icon { font-size: 56px; margin-bottom: 12px; display: block; }
-    .upload-text { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.7); }
+    .upload-zone:active { border-color: var(--pink); background: rgba(255,107,157,0.1); }
+    .upload-icon { font-size: 48px; margin-bottom: 10px; display: block; }
+    .upload-text { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.8); }
     .upload-hint { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
 
-    .upload-zone input[type="file"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .upload-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
+    .upload-actions { display: flex; gap: 10px; margin-top: 12px; }
     .btn-camera {
-      flex: 1;
-      height: 48px;
-      border: 1.5px solid rgba(255,255,255,0.2);
-      background: rgba(255,255,255,0.06);
-      color: var(--text);
-      border-radius: var(--radius-sm);
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
+      flex: 1; height: 48px; border: 1.5px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.06); color: var(--text); border-radius: var(--radius-sm);
+      font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
     }
-
     .btn-camera:active { background: rgba(255,107,157,0.15); border-color: var(--pink); }
 
-    .btn-camera input[type="file"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    /* ---- Photo Preview ---- */
-    .photo-preview {
-      display: none;
-      margin-bottom: 16px;
-    }
-
+    .photo-preview { display: none; margin-bottom: 16px; }
     .photo-preview.active { display: block; }
-
     .preview-img-wrap {
-      position: relative;
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: rgba(0,0,0,0.3);
-      min-height: 200px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: relative; border-radius: var(--radius); overflow: hidden;
+      background: rgba(0,0,0,0.3); min-height: 120px;
+      display: flex; align-items: center; justify-content: center;
     }
-
-    .preview-img-wrap img {
-      max-width: 100%;
-      display: block;
-    }
-
-    .preview-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
+    .preview-img-wrap img { max-width: 100%; display: block; }
+    .preview-actions { display: flex; gap: 8px; margin-top: 10px; }
     .btn-sm {
-      height: 36px;
-      padding: 0 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.06);
-      color: rgba(255,255,255,0.7);
-      transition: all 0.15s;
+      height: 36px; padding: 0 16px; border-radius: 20px; font-size: 13px;
+      font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); transition: all 0.15s;
     }
-
     .btn-sm:active { background: rgba(255,107,157,0.15); border-color: var(--pink); }
 
-    /* ---- Input ---- */
-    .char-input-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
+    .char-input-row { display: flex; gap: 10px; margin-bottom: 16px; }
     .input-char {
-      flex: 1;
-      height: 48px;
-      border: 1.5px solid rgba(255,255,255,0.15);
-      border-radius: var(--radius-sm);
-      padding: 0 16px;
-      font-size: 15px;
-      outline: none;
-      background: rgba(255,255,255,0.06);
-      color: #fff;
-      transition: border-color 0.2s, background 0.2s;
+      flex: 1; height: 48px; border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: var(--radius-sm); padding: 0 16px; font-size: 15px; outline: none;
+      background: rgba(255,255,255,0.06); color: #fff; transition: border-color 0.2s, background 0.2s;
     }
-
     .input-char:focus { border-color: var(--pink); background: rgba(255,255,255,0.1); }
     .input-char::placeholder { color: rgba(255,255,255,0.3); }
 
-    /* ---- Filter Selector ---- */
-    .filter-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .filter-chip, .border-chip {
+      padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: 1.5px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.65); transition: all 0.15s;
     }
+    .filter-chip.active { background: rgba(255,107,157,0.2); border-color: var(--pink); color: #ff9ec4; }
+    .border-chip.active { background: rgba(124,58,237,0.2); border-color: var(--purple); color: #a78bfa; }
+    .filter-chip:active, .border-chip:active { transform: scale(0.96); }
 
-    .filter-chip {
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1.5px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.05);
-      color: rgba(255,255,255,0.65);
-      transition: all 0.15s;
-    }
+    .result-wrap { background: rgba(255,255,255,0.04); border-radius: var(--radius); padding: 16px; text-align: center; }
+    .result-wrap canvas { max-width: 100%; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); margin: 0 auto; }
+    .result-label { font-size: 13px; color: var(--text-secondary); margin-top: 12px; }
 
-    .filter-chip.active {
-      background: rgba(255,107,157,0.2);
-      border-color: var(--pink);
-      color: #ff9ec4;
-    }
-
-    .filter-chip:active { transform: scale(0.96); }
-
-    /* ---- Border Selector ---- */
-    .border-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .border-chip {
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1.5px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.05);
-      color: rgba(255,255,255,0.65);
-      transition: all 0.15s;
-    }
-
-    .border-chip.active {
-      background: rgba(124,58,237,0.2);
-      border-color: var(--purple);
-      color: #a78bfa;
-    }
-
-    .border-chip:active { transform: scale(0.96); }
-
-    /* ---- Result ---- */
-    .result-wrap {
-      background: rgba(255,255,255,0.04);
-      border-radius: var(--radius);
-      padding: 16px;
-      text-align: center;
-    }
-
-    .result-wrap canvas {
-      max-width: 100%;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      display: block;
-      margin: 0 auto;
-    }
-
-    .result-label {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin-top: 12px;
-    }
-
-    /* ---- Caption ---- */
-    .caption-card {
-      background: rgba(255,255,255,0.06);
-      border-radius: var(--radius-sm);
-      padding: 14px 16px;
-      margin-top: 12px;
-    }
-
-    .caption-platform {
-      font-size: 11px;
-      font-weight: 700;
-      color: #ff9ec4;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 6px;
-    }
-
-    .caption-text {
-      font-size: 14px;
-      line-height: 1.6;
-      color: rgba(255,255,255,0.8);
-      margin-bottom: 8px;
-    }
-
-    .caption-copy {
-      font-size: 12px;
-      font-weight: 600;
-      color: #a78bfa;
-      cursor: pointer;
-      padding: 5px 12px;
-      background: rgba(124,58,237,0.15);
-      border-radius: 20px;
-      display: inline-block;
-      border: none;
-      transition: all 0.15s;
-    }
-
+    .caption-card { background: rgba(255,255,255,0.06); border-radius: var(--radius-sm); padding: 14px 16px; margin-top: 12px; }
+    .caption-platform { font-size: 11px; font-weight: 700; color: #ff9ec4; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .caption-text { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.8); margin-bottom: 8px; }
+    .caption-copy { font-size: 12px; font-weight: 600; color: #a78bfa; cursor: pointer; padding: 5px 12px; background: rgba(124,58,237,0.15); border-radius: 20px; display: inline-block; border: none; transition: all 0.15s; }
     .caption-copy:active { background: var(--purple); color: #fff; }
 
-    /* ---- Buttons ---- */
     .btn-primary {
-      width: 100%;
-      height: 52px;
-      background: linear-gradient(135deg, var(--pink), var(--purple));
-      color: #fff;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: 1px;
-      transition: all 0.15s;
-      margin-top: 16px;
+      width: 100%; height: 52px; background: linear-gradient(135deg, var(--pink), var(--purple));
+      color: #fff; border: none; border-radius: var(--radius-sm); font-size: 16px;
+      font-weight: 700; cursor: pointer; letter-spacing: 1px; transition: all 0.15s; margin-top: 16px;
     }
-
     .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
     .btn-primary:disabled { opacity: 0.4; transform: none; cursor: not-allowed; }
 
     .btn-secondary {
-      width: 100%;
-      height: 48px;
-      border: 1.5px solid rgba(255,107,157,0.4);
-      background: rgba(255,255,255,0.06);
-      color: #ff9ec4;
-      border-radius: var(--radius-sm);
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-      margin-top: 10px;
+      width: 100%; height: 48px; border: 1.5px solid rgba(255,107,157,0.4);
+      background: rgba(255,255,255,0.06); color: #ff9ec4; border-radius: var(--radius-sm);
+      font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.15s; margin-top: 10px;
     }
-
     .btn-secondary:active { background: rgba(255,107,157,0.15); }
 
-    /* ---- Toast ---- */
     .toast {
-      position: fixed;
-      top: 50px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--purple);
-      color: #fff;
-      padding: 10px 24px;
-      border-radius: 30px;
-      font-size: 14px;
-      font-weight: 600;
-      opacity: 0;
-      transition: opacity 0.3s;
-      z-index: 200;
-      pointer-events: none;
+      position: fixed; top: 50px; left: 50%; transform: translateX(-50%); background: var(--purple);
+      color: #fff; padding: 10px 24px; border-radius: 30px; font-size: 14px; font-weight: 600;
+      opacity: 0; transition: opacity 0.3s; z-index: 200; pointer-events: none;
     }
-
     .toast.show { opacity: 1; }
 
-    /* ---- Footer ---- */
-    .footer {
-      text-align: center;
-      padding: 24px 0;
-      color: rgba(255,255,255,0.25);
-      font-size: 12px;
-    }
+    .footer { text-align: center; padding: 24px 0; color: rgba(255,255,255,0.25); font-size: 12px; }
 
-    /* ---- Decorative bg ---- */
-    .bg-decor {
-      position: fixed;
-      top: -100px;
-      right: -100px;
-      width: 300px;
-      height: 300px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255,107,157,0.08), transparent 70%);
-      pointer-events: none;
-      z-index: 0;
-    }
+    .bg-decor { position: fixed; top: -100px; right: -100px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(255,107,157,0.08), transparent 70%); pointer-events: none; z-index: 0; }
+    .bg-decor2 { position: fixed; bottom: -80px; left: -80px; width: 250px; height: 250px; border-radius: 50%; background: radial-gradient(circle, rgba(124,58,237,0.08), transparent 70%); pointer-events: none; z-index: 0; }
 
-    .bg-decor2 {
-      position: fixed;
-      bottom: -80px;
-      left: -80px;
-      width: 250px;
-      height: 250px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(124,58,237,0.08), transparent 70%);
-      pointer-events: none;
-      z-index: 0;
+    @media (max-width: 380px) {
+      .upload-zone { padding: 24px 16px; }
+      .upload-icon { font-size: 40px; }
     }
   </style>
 </head>
 <body>
-
-  <div class="bg-decor"></div>
-  <div class="bg-decor2"></div>
+  <div class="bg-decor"></div><div class="bg-decor2"></div>
 
   <div class="app">
-    <!-- Header -->
     <header class="header">
-      <div class="logo-row">
-        <span class="logo-icon">📸</span>
-        <span class="logo-text">Cosplan</span>
-      </div>
+      <div class="logo-row"><span class="logo-icon">📸</span><span class="logo-text">Cosplan</span></div>
       <p class="tagline">漫展集邮快修 · <span>拍完10秒变能看</span></p>
     </header>
 
@@ -451,31 +141,27 @@
     <div class="step active" id="stepUpload">
       <div class="step-title">📷 选一张集邮照</div>
       <div class="step-card">
-        <label class="upload-zone" id="uploadZone">
+        <div class="upload-zone" id="uploadZone">
           <span class="upload-icon">🖼️</span>
-          <div class="upload-text">点击选择照片</div>
+          <div class="upload-text">📁 点击选择照片</div>
           <div class="upload-hint">支持 JPG / PNG / WebP</div>
-          <input type="file" accept="image/*" id="fileInput">
-        </label>
-        <div class="upload-actions">
-          <label class="btn-camera">
-            📷 直接拍照
-            <input type="file" accept="image/*" capture="environment" id="cameraInput">
-          </label>
         </div>
+        <div class="upload-actions">
+          <button class="btn-camera" id="btnCamera">📷 直接拍照</button>
+        </div>
+        <input type="file" accept="image/*" id="fileInput" style="display:none;">
+        <input type="file" accept="image/*" id="cameraInput" style="display:none;">
       </div>
 
-      <!-- Preview area (hidden until photo loaded) -->
       <div class="photo-preview" id="photoPreview">
         <div class="preview-img-wrap" id="previewWrap">
-          <img id="previewImg" alt="预览">
+          <img id="previewImg" alt="预览" style="max-height:50vh;">
         </div>
         <div class="preview-actions">
           <button class="btn-sm" onclick="retakePhoto()">🔄 重选</button>
         </div>
       </div>
 
-      <!-- Character input -->
       <div class="step-title" style="margin-top:8px;">🎭 集到了谁？</div>
       <div class="char-input-row">
         <input class="input-char" id="charName" placeholder="角色名（如：蕾姆）" maxlength="20">
@@ -484,38 +170,35 @@
         <input class="input-char" id="charName2" placeholder="另一个角色（选填）" maxlength="20">
       </div>
 
-      <button class="btn-primary" id="btnProcess" disabled onclick="processPhoto()">✨ 一键美化</button>
+      <button class="btn-primary" id="btnProcess" disabled>✨ 一键美化</button>
+      <div class="footer">Cosplan · cosplan.top</div>
     </div>
 
-    <!-- Step 2: Edit / Preview -->
+    <!-- Step 2: Edit -->
     <div class="step" id="stepEdit">
       <div class="step-title">🎨 微调效果</div>
-
       <div class="step-card">
         <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">滤镜风格</div>
         <div class="filter-row" id="filterRow">
-          <div class="filter-chip active" data-filter="warm" onclick="selectFilter('warm')">🌅 暖调</div>
-          <div class="filter-chip" data-filter="cool" onclick="selectFilter('cool')">❄️ 冷调</div>
-          <div class="filter-chip" data-filter="anime" onclick="selectFilter('anime')">🌸 柔光</div>
-          <div class="filter-chip" data-filter="retro" onclick="selectFilter('retro')">📼 复古</div>
-          <div class="filter-chip" data-filter="none" onclick="selectFilter('none')">🫥 原图</div>
+          <div class="filter-chip active" data-filter="warm">🌅 暖调</div>
+          <div class="filter-chip" data-filter="cool">❄️ 冷调</div>
+          <div class="filter-chip" data-filter="anime">🌸 柔光</div>
+          <div class="filter-chip" data-filter="retro">📼 复古</div>
+          <div class="filter-chip" data-filter="none">🫥 原图</div>
         </div>
-
         <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;margin-top:16px;">相框样式</div>
         <div class="border-row" id="borderRow">
-          <div class="border-chip active" data-border="polaroid" onclick="selectBorder('polaroid')">📷 拍立得</div>
-          <div class="border-chip" data-border="manga" onclick="selectBorder('manga')">💥 漫画格</div>
-          <div class="border-chip" data-border="simple" onclick="selectBorder('simple')">⬜ 简约</div>
+          <div class="border-chip active" data-border="polaroid">📷 拍立得</div>
+          <div class="border-chip" data-border="manga">💥 漫画格</div>
+          <div class="border-chip" data-border="simple">⬜ 简约</div>
         </div>
       </div>
 
-      <!-- Result canvas -->
       <div class="result-wrap">
-        <canvas id="resultCanvas"></canvas>
+        <canvas id="resultCanvas" style="width:100%;"></canvas>
         <div class="result-label">👆 长按图片保存到相册</div>
       </div>
 
-      <!-- Caption -->
       <div class="caption-card" id="captionCard">
         <div class="caption-platform">📱 朋友圈 / 小红书</div>
         <div class="caption-text" id="captionText"></div>
@@ -523,419 +206,197 @@
       </div>
 
       <button class="btn-primary" onclick="downloadResult()">💾 保存到相册</button>
-      <button class="btn-secondary" onclick="resetAll()">🔄 修新的一张</button>
-      <button class="btn-secondary" onclick="downloadResult()" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);">📤 分享给朋友</button>
-    </div>
-
-    <div class="footer">
-      Cosplan · 漫展集邮快修 · cosplan.top
+      <button class="btn-secondary" onclick="shareResult()">📤 分享给朋友</button>
+      <button class="btn-secondary" onclick="resetAll()" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);">🔄 修新的一张</button>
+      <div class="footer">Cosplan · cosplan.top</div>
     </div>
   </div>
 
   <div class="toast" id="toast"></div>
 
-  <script>
-    // --- State ---
-    let originalImg = null;
-    let currentFilter = 'warm';
-    let currentBorder = 'polaroid';
-    let resultBlob = null;
+<script>
+const $=id=>document.getElementById(id);
+let originalImg=null,currentFilter='warm',currentBorder='polaroid',resultBlob=null;
 
-    // --- DOM refs ---
-    const $ = id => document.getElementById(id);
-    const fileInput = $('fileInput');
-    const cameraInput = $('cameraInput');
-    const previewImg = $('previewImg');
-    const photoPreview = $('photoPreview');
-    const previewWrap = $('previewWrap');
-    const charName = $('charName');
-    const charName2 = $('charName2');
-    const btnProcess = $('btnProcess');
-    const resultCanvas = $('resultCanvas');
-    const captionText = $('captionText');
-    const stepUpload = $('stepUpload');
-    const stepEdit = $('stepEdit');
-    const toast = $('toast');
+// --- Upload triggers ---
+$('uploadZone').addEventListener('click',()=>{
+  const inp=$('fileInput');
+  inp.value=''; inp.click();
+});
+$('btnCamera').addEventListener('click',()=>{
+  const inp=$('cameraInput');
+  inp.value=''; 
+  // Remove capture on desktop fallback
+  inp.removeAttribute('capture');
+  inp.setAttribute('capture','environment');
+  inp.click();
+});
+$('fileInput').addEventListener('change',e=>handleFile(e.target.files[0]));
+$('cameraInput').addEventListener('change',e=>handleFile(e.target.files[0]));
 
-    // --- Photo Upload ---
-    fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
-    cameraInput.addEventListener('change', e => handleFile(e.target.files[0]));
+function handleFile(file){
+  if(!file)return;
+  showToast('📥 读取中...');
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      originalImg=img;
+      $('previewImg').src=ev.target.result;
+      $('photoPreview').classList.add('active');
+      $('btnProcess').disabled=false;
+    };
+    img.onerror=()=>showToast('❌ 图片加载失败，请重试');
+    img.src=ev.target.result;
+  };
+  reader.onerror=()=>showToast('❌ 读取失败，请重试');
+  reader.readAsDataURL(file);
+}
 
-    function handleFile(file) {
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        const img = new Image();
-        img.onload = () => {
-          originalImg = img;
-          previewImg.src = ev.target.result;
-          previewImg.style.maxHeight = (window.innerHeight * 0.4) + 'px';
-          photoPreview.classList.add('active');
-          updateProcessBtn();
-        };
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
+function retakePhoto(){
+  originalImg=null; $('previewImg').src=''; $('photoPreview').classList.remove('active');
+  $('fileInput').value=''; $('cameraInput').value=''; $('btnProcess').disabled=true;
+}
 
-    function retakePhoto() {
-      originalImg = null;
-      previewImg.src = '';
-      photoPreview.classList.remove('active');
-      fileInput.value = '';
-      cameraInput.value = '';
-      updateProcessBtn();
-    }
+// --- Filter & border ---
+document.querySelectorAll('#filterRow .filter-chip').forEach(c=>c.addEventListener('click',()=>{currentFilter=c.dataset.filter;document.querySelectorAll('#filterRow .filter-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');renderResult();}));
+document.querySelectorAll('#borderRow .border-chip').forEach(c=>c.addEventListener('click',()=>{currentBorder=c.dataset.border;document.querySelectorAll('#borderRow .border-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');renderResult();}));
 
-    function updateProcessBtn() {
-      btnProcess.disabled = !originalImg;
-    }
+// --- Process ---
+$('btnProcess').addEventListener('click',()=>{
+  if(!originalImg)return;
+  $('stepUpload').classList.remove('active');
+  $('stepEdit').classList.add('active');
+  renderResult(); updateCaption();
+  window.scrollTo({top:0,behavior:'smooth'});
+});
 
-    // --- Filter Selection ---
-    function selectFilter(filter) {
-      currentFilter = filter;
-      document.querySelectorAll('#filterRow .filter-chip').forEach(c => c.classList.remove('active'));
-      document.querySelector(`#filterRow [data-filter="${filter}"]`).classList.add('active');
-      renderResult();
-    }
+function getFilterCSS(f){
+  const m={warm:'saturate(1.3) contrast(1.05) brightness(1.08) sepia(0.2) hue-rotate(-10deg)',cool:'saturate(1.1) contrast(1.08) brightness(1.02) hue-rotate(10deg)',anime:'saturate(1.5) contrast(1.1) brightness(1.1)',retro:'saturate(0.7) contrast(1.15) brightness(0.95) sepia(0.3) hue-rotate(-15deg)',none:'none'};
+  return m[f]||'none';
+}
 
-    function selectBorder(border) {
-      currentBorder = border;
-      document.querySelectorAll('#borderRow .border-chip').forEach(c => c.classList.remove('active'));
-      document.querySelector(`#borderRow [data-border="${border}"]`).classList.add('active');
-      renderResult();
-    }
+function getBorderConfig(b){
+  const c={
+    polaroid:{padTop:80,padBottom:60,padSide:40,bgColor:'#f5f0eb',draw:(ctx,w,h,ix,iy,iw,ih)=>{ctx.fillStyle='rgba(0,0,0,0.04)';ctx.fillRect(ix+2,iy+2,iw,ih);}},
+    manga:{padTop:30,padBottom:30,padSide:30,bgColor:'#1a1a2e',draw:(ctx,w,h,ix,iy,iw,ih)=>{
+      ctx.strokeStyle='#fff';ctx.lineWidth=8;ctx.strokeRect(ix-4,iy-4,iw+8,ih+8);
+      ctx.strokeStyle='#e94560';ctx.lineWidth=3;ctx.strokeRect(ix-10,iy-10,iw+20,ih+20);
+      ctx.strokeStyle='#fff';ctx.lineWidth=4;
+      const cs=40;
+      [[ix-14,iy-14,1,1],[ix+iw+14,iy-14,-1,1],[ix-14,iy+ih+14,1,-1],[ix+iw+14,iy+ih+14,-1,-1]].forEach(([cx,cy,dx,dy])=>{ctx.beginPath();ctx.moveTo(cx,cy+dy*cs);ctx.lineTo(cx,cy);ctx.lineTo(cx+dx*cs,cy);ctx.stroke();});
+    }},
+    simple:{padTop:20,padBottom:20,padSide:20,bgColor:'#0d0614',draw:(ctx,w,h,ix,iy,iw,ih)=>{ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ix-1,iy-1,iw+2,ih+2,4);ctx.stroke();}}
+  };
+  return c[b]||c.simple;
+}
 
-    // --- Filter CSS ---
-    function getFilterCSS(filter) {
-      const map = {
-        warm: 'saturate(1.3) contrast(1.05) brightness(1.08) sepia(0.2) hue-rotate(-10deg)',
-        cool: 'saturate(1.1) contrast(1.08) brightness(1.02) hue-rotate(10deg)',
-        anime: 'saturate(1.5) contrast(1.1) brightness(1.1)',
-        retro: 'saturate(0.7) contrast(1.15) brightness(0.95) sepia(0.3) hue-rotate(-15deg)',
-        none: 'none',
-      };
-      return map[filter] || 'none';
-    }
+function renderResult(){
+  if(!originalImg)return;
+  const canvas=$('resultCanvas'),ctx=canvas.getContext('2d'),img=originalImg;
+  let sw=img.width,sh=img.height;
+  const outW=810,outH=1080,targetRatio=3/4;
+  let cropW,cropH,cropX,cropY;
+  if(sw/sh>targetRatio){cropH=sh;cropW=sh*targetRatio;cropX=(sw-cropW)/2;cropY=0;}
+  else{cropW=sw;cropH=sw/targetRatio;cropX=0;cropY=Math.max(0,(sh-cropH)*0.3);}
+  const cfg=getBorderConfig(currentBorder);
+  const padTop=cfg.padTop,padBottom=cfg.padBottom,padSide=cfg.padSide;
+  canvas.width=outW;canvas.height=outH;
+  ctx.fillStyle=cfg.bgColor||'#0d0614';ctx.fillRect(0,0,outW,outH);
+  const ix=padSide,iy=padTop,iw=outW-padSide*2,ih=outH-padTop-padBottom;
+  ctx.save();ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();
+  const fcss=getFilterCSS(currentFilter);
+  if(fcss!=='none')ctx.filter=fcss;
+  ctx.drawImage(img,cropX,cropY,cropW,cropH,ix,iy,iw,ih);
+  ctx.filter='none';ctx.restore();
+  if(cfg.draw)cfg.draw(ctx,outW,outH,ix,iy,iw,ih);
+  drawTextOverlay(ctx,outW,outH,ix,iy,iw,ih,cfg);
+  canvas.toBlob(blob=>{resultBlob=blob;},'image/jpeg',0.92);
+}
 
-    // --- Process Photo ---
-    function processPhoto() {
-      if (!originalImg) return;
-      stepUpload.classList.remove('active');
-      stepEdit.classList.add('active');
-      renderResult();
-      updateCaption();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+function drawTextOverlay(ctx,w,h,ix,iy,iw,ih,cfg){
+  const n1=$('charName').value.trim(),n2=$('charName2').value.trim();
+  if(!n1&&!n2)return;
+  const isP=currentBorder==='polaroid',isM=currentBorder==='manga';
+  if(isP){
+    ctx.fillStyle='#333';ctx.font='600 28px "PingFang SC","Microsoft YaHei",sans-serif';ctx.textAlign='center';
+    let l=n1;if(n2)l+=`  ×  ${n2}`;
+    ctx.fillText(l,w/2,h-cfg.padBottom/2+6);
+  }else if(isM){
+    const taH=80;
+    const g=ctx.createLinearGradient(0,h-cfg.padBottom-taH,0,h-cfg.padBottom);
+    g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(0.5,'rgba(0,0,0,0.4)');g.addColorStop(1,'rgba(0,0,0,0.7)');
+    ctx.fillStyle=g;ctx.fillRect(ix,iy+ih-taH,iw,taH);
+    ctx.fillStyle='#fff';ctx.font='700 32px "PingFang SC","Microsoft YaHei",sans-serif';ctx.textAlign='center';
+    let l=`集邮：${n1}`;if(n2)l+=`  ×  ${n2}`;
+    ctx.strokeStyle='rgba(0,0,0,0.6)';ctx.lineWidth=4;ctx.strokeText(l,w/2,iy+ih-20);
+    ctx.fillText(l,w/2,iy+ih-20);
+  }else{
+    ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(ix,iy+ih-50,iw,50);
+    ctx.fillStyle='#fff';ctx.font='600 22px "PingFang SC","Microsoft YaHei",sans-serif';ctx.textAlign='center';
+    let l=`集邮：${n1}`;if(n2)l+=`  ×  ${n2}`;
+    ctx.fillText(l,w/2,iy+ih-30);
+  }
+}
 
-    function renderResult() {
-      if (!originalImg) return;
-      const canvas = resultCanvas;
-      const ctx = canvas.getContext('2d');
+function updateCaption(){
+  const n1=$('charName').value.trim()||'???',n2=$('charName2').value.trim();
+  const cs=[
+    `今天集到${n1}${n2?'和'+n2:''}了！漫展最快乐的事就是遇到喜欢的角色 🎉`,
+    `#漫展集邮 ${n1}${n2?' × '+n2:''} ✅ 今天的人品不错！`,
+    `偶遇${n1}${n2?'和'+n2:''}！漫展的意义就是把喜欢的角色都集齐 ✨`,
+  ];
+  $('captionText').textContent=cs[Math.floor(Math.random()*cs.length)];
+}
 
-      const img = originalImg;
-      let sw = img.width;
-      let sh = img.height;
+function copyCaption(){
+  const t=$('captionText').textContent;
+  navigator.clipboard.writeText(t).then(()=>showToast('✅ 文案已复制，去朋友圈发吧！')).catch(()=>showToast('📋 请长按上方文案手动复制'));
+}
 
-      // Target output: portrait orientation, 3:4 aspect, max 1080px tall
-      const outW = 810;
-      const outH = 1080;
+function downloadResult(){
+  if(!resultBlob)return;
+  const url=URL.createObjectURL(resultBlob),a=document.createElement('a');
+  a.href=url;a.download='集邮_Cosplan.jpg';document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  showToast('💾 保存成功！发朋友圈吧～');
+}
 
-      // Calculate crop: center-crop the image to 3:4
-      let cropW, cropH, cropX, cropY;
-      const targetRatio = 3 / 4;
+function shareResult(){
+  if(navigator.share&&resultBlob){
+    const file=new File([resultBlob],'集邮照.jpg',{type:'image/jpeg'});
+    navigator.share({title:'Cosplan 集邮快修',text:$('captionText').textContent,files:[file]}).catch(()=>{});
+  }else if(navigator.share){
+    navigator.share({title:'Cosplan 集邮快修',text:$('captionText').textContent,url:window.location.href}).catch(()=>{});
+  }else{downloadResult();}
+}
 
-      if (sw / sh > targetRatio) {
-        // Image wider than 3:4 → crop sides
-        cropH = sh;
-        cropW = sh * targetRatio;
-        cropX = (sw - cropW) / 2;
-        cropY = 0;
-      } else {
-        // Image taller than 3:4 → crop top/bottom
-        cropW = sw;
-        cropH = sw / targetRatio;
-        cropX = 0;
-        cropY = (sh - cropH) / 2;
-        // Bias toward upper part (faces are usually top-center in selfies)
-        cropY = Math.max(0, (sh - cropH) * 0.3);
-      }
+function resetAll(){
+  originalImg=null;$('previewImg').src='';$('photoPreview').classList.remove('active');
+  $('fileInput').value='';$('cameraInput').value='';
+  $('charName').value='';$('charName2').value='';
+  currentFilter='warm';currentBorder='polaroid';resultBlob=null;
+  document.querySelectorAll('#filterRow .filter-chip').forEach(c=>c.classList.toggle('active',c.dataset.filter==='warm'));
+  document.querySelectorAll('#borderRow .border-chip').forEach(c=>c.classList.toggle('active',c.dataset.border==='polaroid'));
+  $('stepEdit').classList.remove('active');$('stepUpload').classList.add('active');
+  $('btnProcess').disabled=true;window.scrollTo({top:0,behavior:'smooth'});
+}
 
-      // Border settings
-      let borderConfig = getBorderConfig(currentBorder);
-      const padTop = borderConfig.padTop;
-      const padBottom = borderConfig.padBottom;
-      const padSide = borderConfig.padSide;
+function showToast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
-      canvas.width = outW;
-      canvas.height = outH;
+// Live preview on name change
+['charName','charName2'].forEach(id=>$(id).addEventListener('input',()=>{if($('stepEdit').classList.contains('active')){renderResult();updateCaption();}}));
 
-      // Background
-      ctx.fillStyle = borderConfig.bgColor || '#0d0614';
-      ctx.fillRect(0, 0, outW, outH);
-
-      // Draw image area
-      const imgAreaX = padSide;
-      const imgAreaY = padTop;
-      const imgAreaW = outW - padSide * 2;
-      const imgAreaH = outH - padTop - padBottom;
-
-      // Save context for filter
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(imgAreaX, imgAreaY, imgAreaW, imgAreaH);
-      ctx.clip();
-
-      const filterCSS = getFilterCSS(currentFilter);
-      if (filterCSS !== 'none') {
-        ctx.filter = filterCSS;
-      }
-
-      ctx.drawImage(img, cropX, cropY, cropW, cropH, imgAreaX, imgAreaY, imgAreaW, imgAreaH);
-      ctx.filter = 'none';
-      ctx.restore();
-
-      // Draw border decorations
-      drawBorder(ctx, borderConfig, outW, outH, imgAreaX, imgAreaY, imgAreaW, imgAreaH);
-
-      // Draw character names
-      drawTextOverlay(ctx, outW, outH, imgAreaX, imgAreaY, imgAreaW, imgAreaH, borderConfig);
-
-      // Convert to blob for download
-      canvas.toBlob(blob => {
-        resultBlob = blob;
-      }, 'image/jpeg', 0.92);
-    }
-
-    function getBorderConfig(border) {
-      const configs = {
-        polaroid: {
-          padTop: 80, padBottom: 60, padSide: 40,
-          bgColor: '#f5f0eb',
-          draw: (ctx, w, h, ix, iy, iw, ih) => {
-            // Subtle shadow inside
-            ctx.fillStyle = 'rgba(0,0,0,0.06)';
-            ctx.fillRect(ix + 2, iy + 2, iw, ih);
-          }
-        },
-        manga: {
-          padTop: 30, padBottom: 30, padSide: 30,
-          bgColor: '#1a1a2e',
-          draw: (ctx, w, h, ix, iy, iw, ih) => {
-            // Manga frame: white border with black outline
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 8;
-            ctx.strokeRect(ix - 4, iy - 4, iw + 8, ih + 8);
-            ctx.strokeStyle = '#e94560';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(ix - 10, iy - 10, iw + 20, ih + 20);
-            // Corner accents
-            const cornerSize = 40;
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 4;
-            [[ix - 14, iy - 14, 1, 1], [ix + iw + 14, iy - 14, -1, 1],
-             [ix - 14, iy + ih + 14, 1, -1], [ix + iw + 14, iy + ih + 14, -1, -1]]
-              .forEach(([cx, cy, dx, dy]) => {
-                ctx.beginPath();
-                ctx.moveTo(cx, cy + dy * cornerSize);
-                ctx.lineTo(cx, cy);
-                ctx.lineTo(cx + dx * cornerSize, cy);
-                ctx.stroke();
-              });
-          }
-        },
-        simple: {
-          padTop: 20, padBottom: 20, padSide: 20,
-          bgColor: '#0d0614',
-          draw: (ctx, w, h, ix, iy, iw, ih) => {
-            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-            ctx.lineWidth = 1;
-            ctx.roundRect(ix - 1, iy - 1, iw + 2, ih + 2, 4);
-            ctx.stroke();
-          }
-        }
-      };
-      return configs[border] || configs.simple;
-    }
-
-    function drawBorder(ctx, config, w, h, ix, iy, iw, ih) {
-      if (config.draw) {
-        config.draw(ctx, w, h, ix, iy, iw, ih);
-      }
-    }
-
-    function drawTextOverlay(ctx, w, h, ix, iy, iw, ih, config) {
-      const name1 = charName.value.trim();
-      const name2 = charName2.value.trim();
-
-      if (!name1 && !name2) return;
-
-      const isPolaroid = currentBorder === 'polaroid';
-      const isManga = currentBorder === 'manga';
-
-      if (isPolaroid) {
-        // Text in bottom margin (polaroid style)
-        const textY = h - config.padBottom / 2 + 6;
-        ctx.fillStyle = '#333';
-        ctx.font = '600 28px "PingFang SC", "Microsoft YaHei", sans-serif';
-        ctx.textAlign = 'center';
-        let label = name1;
-        if (name2) label += `  ×  ${name2}`;
-        ctx.fillText(label, w / 2, textY);
-      } else if (isManga) {
-        // Text overlaid on image - bottom area with semi-transparent bg
-        const textAreaH = 80;
-        const gradient = ctx.createLinearGradient(0, h - config.padBottom - textAreaH, 0, h - config.padBottom);
-        gradient.addColorStop(0, 'rgba(0,0,0,0)');
-        gradient.addColorStop(0.5, 'rgba(0,0,0,0.4)');
-        gradient.addColorStop(1, 'rgba(0,0,0,0.7)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(ix, iy + ih - textAreaH, iw, textAreaH);
-
-        const textY = iy + ih - 20;
-        ctx.fillStyle = '#fff';
-        ctx.font = '700 32px "PingFang SC", "Microsoft YaHei", sans-serif';
-        ctx.textAlign = 'center';
-        let label = `集邮：${name1}`;
-        if (name2) label += `  ×  ${name2}`;
-        // Add stroke for readability
-        ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-        ctx.lineWidth = 4;
-        ctx.strokeText(label, w / 2, textY);
-        ctx.fillText(label, w / 2, textY);
-      } else {
-        // Simple: text at bottom of image
-        const textY = iy + ih - 30;
-        // Background bar
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(ix, iy + ih - 50, iw, 50);
-
-        ctx.fillStyle = '#fff';
-        ctx.font = '600 22px "PingFang SC", "Microsoft YaHei", sans-serif';
-        ctx.textAlign = 'center';
-        let label = `集邮：${name1}`;
-        if (name2) label += `  ×  ${name2}`;
-        ctx.fillText(label, w / 2, textY);
-      }
-    }
-
-    // --- Caption ---
-    function updateCaption() {
-      const n1 = charName.value.trim() || '???';
-      const n2 = charName2.value.trim();
-      let captions = [
-        `今天集到${n1}${n2 ? '和' + n2 : ''}了！漫展最快乐的事就是遇到喜欢的角色 🎉`,
-        `#漫展集邮 ${n1}${n2 ? ' × ' + n2 : ''} ✅ 今天的人品不错！`,
-        `偶遇${n1}${n2 ? '和' + n2 : ''}！漫展的意义就是把喜欢的角色都集齐 ✨`,
-      ];
-      captionText.textContent = captions[Math.floor(Math.random() * captions.length)];
-    }
-
-    function copyCaption() {
-      navigator.clipboard.writeText(captionText.textContent).then(() => {
-        showToast('✅ 文案已复制，去朋友圈发吧！');
-      }).catch(() => {
-        showToast('📋 请长按上方文案手动复制');
-      });
-    }
-
-    // --- Download ---
-    function downloadResult() {
-      if (!resultBlob) return;
-      const url = URL.createObjectURL(resultBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      const n1 = charName.value.trim() || '集邮照';
-      a.download = `集邮_${n1}_Cosplan.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast('💾 保存成功！发朋友圈吧～');
-    }
-
-    // --- Share ---
-    function shareResult() {
-      if (navigator.share && resultBlob) {
-        const file = new File([resultBlob], '集邮照.jpg', { type: 'image/jpeg' });
-        navigator.share({
-          title: 'Cosplan 集邮快修',
-          text: captionText.textContent,
-          files: [file],
-        }).catch(() => {});
-      } else if (navigator.share) {
-        navigator.share({
-          title: 'Cosplan 集邮快修',
-          text: captionText.textContent,
-          url: window.location.href,
-        }).catch(() => {});
-      } else {
-        downloadResult();
-      }
-    }
-
-    // Attach share to the third button
-    document.querySelectorAll('.btn-secondary')[1].addEventListener('click', shareResult);
-
-    // --- Reset ---
-    function resetAll() {
-      originalImg = null;
-      previewImg.src = '';
-      photoPreview.classList.remove('active');
-      fileInput.value = '';
-      cameraInput.value = '';
-      charName.value = '';
-      charName2.value = '';
-      currentFilter = 'warm';
-      currentBorder = 'polaroid';
-      resultBlob = null;
-      stepEdit.classList.remove('active');
-      stepUpload.classList.add('active');
-      updateProcessBtn();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // --- Toast ---
-    function showToast(msg) {
-      toast.textContent = msg;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2200);
-    }
-
-    // --- Live preview update when inputs change ---
-    charName.addEventListener('input', () => {
-      updateProcessBtn();
-      if (stepEdit.classList.contains('active')) {
-        renderResult();
-        updateCaption();
-      }
-    });
-
-    charName2.addEventListener('input', () => {
-      if (stepEdit.classList.contains('active')) {
-        renderResult();
-        updateCaption();
-      }
-    });
-
-    // --- roundRect polyfill ---
-    if (!CanvasRenderingContext2D.prototype.roundRect) {
-      CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-        if (typeof r === 'number') r = { tl: r, tr: r, br: r, bl: r };
-        this.beginPath();
-        this.moveTo(x + r.tl, y);
-        this.lineTo(x + w - r.tr, y);
-        this.quadraticCurveTo(x + w, y, x + w, y + r.tr);
-        this.lineTo(x + w, y + h - r.br);
-        this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
-        this.lineTo(x + r.bl, y + h);
-        this.quadraticCurveTo(x, y + h, x, y + h - r.bl);
-        this.lineTo(x, y + r.tl);
-        this.quadraticCurveTo(x, y, x + r.tl, y);
-        this.closePath();
-      };
-    }
-  </script>
-
+// roundRect polyfill
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    if(typeof r==='number')r={tl:r,tr:r,br:r,bl:r};
+    this.beginPath();this.moveTo(x+r.tl,y);this.lineTo(x+w-r.tr,y);this.quadraticCurveTo(x+w,y,x+w,y+r.tr);
+    this.lineTo(x+w,y+h-r.br);this.quadraticCurveTo(x+w,y+h,x+w-r.br,y+h);
+    this.lineTo(x+r.bl,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r.bl);
+    this.lineTo(x,y+r.tl);this.quadraticCurveTo(x,y,x+r.tl,y);this.closePath();
+  };
+}
+</script>
 </body>
 </html>
