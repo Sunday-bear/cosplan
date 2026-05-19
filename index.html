@@ -6,7 +6,7 @@
   <title>Cosplan · 角色快诊</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js'"></script>
   <style>
     :root {
       --pink:#ff6b9d;--purple:#7c3aed;--bg:#0d0614;--card:rgba(255,255,255,0.06);
@@ -231,15 +231,20 @@ const options = {
 };
 
 // ═══════ MODELS ═══════
-const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model';
+const MODEL_URL = 'models';
 let modelsLoaded = false;
 
 async function loadModels() {
   if (modelsLoaded) return;
   showLoading('加载 AI 模型...');
-  await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-  await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-  modelsLoaded = true;
+  try {
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    modelsLoaded = true;
+  } catch(e) {
+    showToast('⚠️ 模型加载失败，请刷新重试');
+    console.error('Model load error:', e);
+  }
   hideLoading();
 }
 
@@ -537,9 +542,13 @@ function showToast(msg) {
   const t = document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2000);
 }
+let loadingTimer = null;
 function showLoading(msg) {
   document.getElementById('loadingText').textContent=msg;
   document.getElementById('loadingOverlay').classList.remove('hidden');
+  // Safety timeout: hide loading after 20s
+  if (loadingTimer) clearTimeout(loadingTimer);
+  loadingTimer = setTimeout(() => { hideLoading(); showToast('⚠️ 加载超时，请检查网络后重试'); }, 20000);
 }
 function hideLoading() {
   document.getElementById('loadingOverlay').classList.add('hidden');
