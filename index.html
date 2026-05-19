@@ -3,272 +3,327 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cosplan · 漫展黑话通</title>
+  <title>Cosplan · 社恐救星</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
   <style>
     :root {
-      --pink: #ff6b9d; --purple: #7c3aed;
-      --bg: #0d0614; --card: rgba(255,255,255,0.06);
-      --text: #fff; --sub: rgba(255,255,255,0.5);
+      --pink: #ff6b9d; --purple: #7c3aed; --bg: #0d0614;
+      --card: rgba(255,255,255,0.06); --text: #fff; --sub: rgba(255,255,255,0.5);
       --radius: 18px; --radius-sm: 12px;
     }
     * { margin:0;padding:0;box-sizing:border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: var(--bg); color: var(--text); min-height: 100vh; min-height: 100dvh;
-      -webkit-font-smoothing: antialiased; display: flex; justify-content: center;
+      font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+      background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;
+      -webkit-font-smoothing:antialiased;display:flex;justify-content:center;
     }
-    .app { width: 100%; max-width: 480px; padding: 0 16px 60px; position: relative; z-index: 1; }
+    .app { width:100%;max-width:480px;padding:0 16px 80px;position:relative;z-index:1; }
 
-    .header { text-align: center; padding: 44px 0 20px; }
-    .logo { font-size: 36px; line-height: 1; }
-    .title {
-      font-size: 26px; font-weight: 800; margin: 8px 0 6px;
-      background: linear-gradient(135deg, var(--pink), var(--purple));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    .header { text-align:center;padding:44px 0 20px; }
+    .logo { font-size:40px; }
+    .title { font-size:26px;font-weight:800;margin:6px 0 4px;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+    .subtitle { font-size:13px;color:var(--sub); }
+    .subtitle span { color:#ff9ec4;font-weight:600; }
+
+    /* Mission cards */
+    .mission-grid { display:flex;flex-direction:column;gap:10px;margin-top:20px; }
+    .mission {
+      background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:18px 16px;
+      cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent;
+      display:flex;align-items:center;gap:14px;
     }
-    .subtitle { font-size: 14px; color: var(--sub); }
-    .subtitle span { color: #ff9ec4; font-weight: 600; }
+    .mission:active { border-color:var(--pink);background:rgba(255,107,157,0.08); }
+    .mission-icon { font-size:36px;flex-shrink:0; }
+    .mission-info { flex:1;min-width:0; }
+    .mission-name { font-size:16px;font-weight:700;margin-bottom:3px; }
+    .mission-desc { font-size:12px;color:var(--sub);line-height:1.5; }
+    .mission-arrow { font-size:18px;color:var(--sub);flex-shrink:0; }
 
-    /* Scene tabs */
-    .tabs-wrap { position: sticky; top: 0; z-index: 10; background: var(--bg); padding: 8px 0 12px; margin: 0 -16px; padding-left: 16px; }
-    .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-    .tabs::-webkit-scrollbar { display: none; }
-    .tab {
-      flex-shrink: 0; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
-      cursor: pointer; white-space: nowrap; border: 1.5px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.55); transition: all 0.15s;
-      -webkit-tap-highlight-color: transparent; user-select: none;
+    /* Detail view */
+    .back-btn {
+      display:flex;align-items:center;gap:6px;font-size:14px;color:var(--sub);
+      cursor:pointer;margin-bottom:16px;padding:4px 0;-webkit-tap-highlight-color:transparent;
     }
-    .tab.active { background: rgba(255,107,157,0.18); border-color: var(--pink); color: #ff9ec4; }
-    .tab:active { transform: scale(0.96); }
+    .back-btn:active { color:var(--pink); }
 
-    /* Template cards */
-    .card-list { display: flex; flex-direction: column; gap: 10px; }
-    .card {
-      background: var(--card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius); padding: 16px;
-      transition: all 0.2s;
+    .mission-hero { text-align:center;padding:12px 0 20px; }
+    .mission-hero .icon { font-size:64px;display:block;margin-bottom:8px; }
+    .mission-hero .name { font-size:22px;font-weight:800; }
+    .mission-hero .pain { font-size:14px;color:#ff9ec4;margin-top:4px;font-weight:600; }
+
+    /* Flow steps */
+    .flow { counter-reset:step;display:flex;flex-direction:column;gap:14px; }
+    .flow-step {
+      background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);padding:18px 16px;
+      position:relative;overflow:hidden;
     }
-    .card:active { border-color: rgba(255,107,157,0.3); }
-
-    .card-tags { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-    .card-tag {
-      font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 12px;
-      background: rgba(255,107,157,0.12); color: #ff9ec4;
+    .flow-step::before {
+      counter-increment:step;content:counter(step);
+      position:absolute;top:12px;right:16px;font-size:48px;font-weight:800;
+      color:rgba(255,255,255,0.03);line-height:1;pointer-events:none;
     }
-    .card-tag.green { background: rgba(16,185,129,0.12); color: #34d399; }
-    .card-tag.blue { background: rgba(96,165,250,0.12); color: #93c5fd; }
-
-    .card-text {
-      font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.85);
-      background: rgba(255,255,255,0.04); padding: 12px 14px; border-radius: var(--radius-sm);
-      position: relative; margin-bottom: 10px;
+    .flow-step-header { display:flex;align-items:center;gap:8px;margin-bottom:10px; }
+    .flow-step-tag {
+      font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;
+      background:rgba(255,107,157,0.15);color:#ff9ec4;text-transform:uppercase;letter-spacing:0.5px;
     }
-    .card-text .highlight { color: #ff9ec4; font-weight: 600; }
+    .flow-step-tag.yellow { background:rgba(245,158,11,0.15);color:#f59e0b; }
+    .flow-step-tag.green { background:rgba(16,185,129,0.15);color:#34d399; }
+    .flow-step-tag.purple { background:rgba(124,58,237,0.15);color:#a78bfa; }
+    .flow-step-title { font-size:14px;font-weight:700;color:rgba(255,255,255,0.8); }
 
-    .card-scene {
-      font-size: 11px; color: var(--sub); margin-bottom: 8px; display: flex; align-items: center; gap: 4px;
+    .script-box {
+      background:rgba(255,255,255,0.04);border-radius:var(--radius-sm);padding:14px 16px;
+      margin:10px 0;position:relative;
     }
+    .script-label { font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px; }
+    .script-text { font-size:15px;line-height:1.7;color:rgba(255,255,255,0.9); }
+    .script-text em { font-style:normal;color:#ff9ec4;font-weight:600; }
+    .script-tip { font-size:12px;color:var(--sub);margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);line-height:1.5; }
+    .script-tip::before { content:'💡 '; }
 
-    .card-actions { display: flex; gap: 8px; }
     .btn-copy {
-      font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 18px; cursor: pointer;
-      border: none; background: linear-gradient(135deg, var(--pink), var(--purple));
-      color: #fff; transition: all 0.15s; letter-spacing: 0.5px;
+      display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;
+      padding:8px 18px;border-radius:20px;cursor:pointer;border:none;
+      background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;
+      transition:all 0.15s;letter-spacing:0.5px;margin-top:6px;
     }
-    .btn-copy:active { transform: scale(0.96); opacity: 0.85; }
-    .btn-copy.copied { background: #10b981; }
+    .btn-copy:active { transform:scale(0.96);opacity:0.85; }
+    .btn-copy.copied { background:#10b981; }
 
-    .btn-tone {
-      font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 16px; cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.15); background: transparent;
-      color: rgba(255,255,255,0.5); transition: all 0.15s;
+    .psych-box {
+      background:rgba(124,58,237,0.08);border-left:3px solid var(--purple);
+      border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 14px;margin-top:10px;
     }
-    .btn-tone.active { border-color: var(--purple); color: #a78bfa; background: rgba(124,58,237,0.12); }
+    .psych-box .label { font-size:10px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px; }
+    .psych-box .text { font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5; }
+
+    .red-flag {
+      background:rgba(239,68,68,0.08);border-left:3px solid #ef4444;
+      border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 14px;margin-top:10px;
+    }
+    .red-flag .label { font-size:10px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px; }
+    .red-flag .text { font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5; }
 
     .toast {
-      position: fixed; top: 50px; left: 50%; transform: translateX(-50%); z-index: 200;
-      background: var(--purple); color: #fff; padding: 10px 24px; border-radius: 30px;
-      font-size: 14px; font-weight: 600; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+      position:fixed;top:50px;left:50%;transform:translateX(-50%);z-index:200;
+      background:var(--purple);color:#fff;padding:10px 24px;border-radius:30px;
+      font-size:14px;font-weight:600;opacity:0;transition:opacity 0.3s;pointer-events:none;
     }
-    .toast.show { opacity: 1; }
+    .toast.show { opacity:1; }
 
-    .footer { text-align: center; padding: 24px 0; color: rgba(255,255,255,0.18); font-size: 12px; }
+    .footer { text-align:center;padding:24px 0;color:rgba(255,255,255,0.15);font-size:12px; }
+    .bg-decor { position:fixed;top:-120px;right:-120px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,157,0.05),transparent 70%);pointer-events:none;z-index:0; }
+    .bg-decor2 { position:fixed;bottom:-100px;left:-100px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,0.05),transparent 70%);pointer-events:none;z-index:0; }
 
-    .bg-decor { position: fixed; top: -120px; right: -120px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(255,107,157,0.06), transparent 70%); pointer-events: none; z-index: 0; }
-    .bg-decor2 { position: fixed; bottom: -100px; left: -100px; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(124,58,237,0.06), transparent 70%); pointer-events: none; z-index: 0; }
+    .view { display:none; }
+    .view.active { display:block; }
   </style>
 </head>
 <body>
   <div class="bg-decor"></div><div class="bg-decor2"></div>
 
   <div class="app">
-    <header class="header">
-      <div class="logo">💬</div>
-      <div class="title">漫展黑话通</div>
-      <p class="subtitle">社恐嘴替 · <span>不知道怎么开口？复制就行</span></p>
-    </header>
+    <!-- Home -->
+    <div class="view active" id="homeView">
+      <header class="header">
+        <div class="logo">🦸</div>
+        <div class="title">社恐救星</div>
+        <p class="subtitle">漫展社交全攻略 · <span>不再站在原地纠结</span></p>
+      </header>
 
-    <div class="tabs-wrap">
-      <div class="tabs" id="tabs"></div>
+      <div class="mission-grid" id="missionGrid"></div>
+      <div class="footer">Cosplan · cosplan.top</div>
     </div>
 
-    <div class="card-list" id="cardList"></div>
-    <div class="footer">Cosplan · cosplan.top</div>
+    <!-- Detail -->
+    <div class="view" id="detailView">
+      <div class="back-btn" onclick="goHome()">← 返回</div>
+      <div class="mission-hero" id="missionHero"></div>
+      <div class="flow" id="flowSteps"></div>
+      <div class="footer">Cosplan · cosplan.top</div>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
 
 <script>
-// --- Database ---
-const scenes = [
-  { id:'jyp', icon:'📸', name:'找Coser集邮' },
-  { id:'photog', icon:'📷', name:'找摄影师' },
-  { id:'hair', icon:'💇', name:'找毛娘/妆娘' },
-  { id:'pic', icon:'📩', name:'要返图' },
-  { id:'praise', icon:'👍', name:'夸人/被夸' },
-  { id:'shop', icon:'🛍️', name:'买周边/问装备' },
-  { id:'follow', icon:'📞', name:'漫展后跟进' },
-  { id:'help', icon:'🆘', name:'现场求助' },
+// ═══════════════════════════════ DATA ═══════════════════════════════
+const missions = [
+  {
+    id:'jyp', icon:'📸', name:'找 Coser 集邮', desc:'看到喜欢的角色不敢开口？从搭话到合影到加好友，全程脚本',
+    pain:'最常见的社死现场',
+    flow:[
+      {tag:'准备',tagType:'yellow',title:'接近前 3 秒',scripts:[
+        {text:'深呼吸一次。记住：对方也是来玩的，<em>被夸只会开心，不会觉得你烦</em>。',tip:'紧张是正常的，但你的紧张跟对方的反应无关——你还没开口，对方根本不知道你要干嘛。'}
+      ]},
+      {tag:'开口',tagType:'',title:'第一句话',scripts:[
+        {text:'「你好！我超喜欢<em>{角色}</em>的，可以跟你合个影吗？」',tip:'直接说喜欢+问合影。不用绕弯子——漫展上所有人都知道这是常规操作。用「超喜欢」而不是「喜欢」，多一个字的热情度差别很大。'}
+      ]},
+      {tag:'反馈',tagType:'green',title:'对方答应后',scripts:[
+        {text:'「谢谢！！」（拍照）→ 「太棒了谢谢你～」',tip:'拍完别转身就走，这比不开口还扣分。至少说声谢谢再走。'},
+        {text:'「拍得好好！你出这个角色太合适了～」',tip:'夸具体点会让人记住你。如果是同作品的，可以加一句「我也好喜欢这部！」'}
+      ]},
+      {tag:'加好友',tagType:'purple',title:'加联系方式（可选）',scripts:[
+        {text:'「可以加个微信吗？回头我把照片发你～」',tip:'用「发照片」做理由最自然。对方拒绝也完全正常，微笑说「没事没事」就可以走了。'},
+        {text:'「你微博/小红书是什么呀？我关注你！」',tip:'如果对方看起来是重度 coser，问社交账号比问微信更自然。'}
+      ]},
+      {tag:'避雷',tagType:'',title:'这些话千万别说',redFlags:[
+        '❌ 「你比原版好看！」→ 拉踩角色容易冒犯人',
+        '❌ 不要评论对方的服装质量或身材',
+        '❌ 不要未经允许碰对方的道具或假发',
+      ]},
+    ]
+  },
+  {
+    id:'photog', icon:'📷', name:'找摄影师约拍', desc:'想拍正片但不知道怎么跟摄影师沟通？从约拍到选片，手把手教你',
+    pain:'想拍好照片但张不开嘴',
+    flow:[
+      {tag:'准备',tagType:'yellow',title:'找对人',scripts:[
+        {text:'观察对方：手里没拿相机的不叫；正在给别人拍的不插队；<em>拍完正在回看照片的时机最好</em>。',tip:'等对方拍完上一组，整理装备的时候上去问，成功率最高。'}
+      ]},
+      {tag:'开口',tagType:'',title:'第一句话',scripts:[
+        {text:'「老师你好，请问你现在有空吗？我出的是<em>{角色}</em>，想请你帮我拍几张～」',tip:'叫「老师」是圈内对摄影师的尊称，显得你懂行。说「几张」而不是「一套正片」，降低对方的心理压力。'},
+        {text:'「哈喽～可以蹭几张吗？随便按按就行，不用修图的！」',tip:'「蹭几张」是黑话，意思是随便拍拍不要求质量。对方答应率极高。'}
+      ]},
+      {tag:'配合',tagType:'green',title:'拍摄中怎么配合',scripts:[
+        {text:'主动说「我不知道摆什么 pose，你指挥我就行！」',tip:'你最怕尴尬，摄影师也怕你不配合。主动把主导权交出去，双方都轻松。'},
+        {text:'每拍完几个角度，说一句「好的！」或者点头。',tip:'给摄影师正反馈很重要——沉默会让对方怀疑自己拍得不好。'}
+      ]},
+      {tag:'收尾',tagType:'purple',title:'拍完后怎么说',scripts:[
+        {text:'「谢谢你！方便加个微信吗？回头传照片给我就行，不着急～」',tip:'别说「修完发我」，说「传照片给我就行」——不预设对方会帮你修，更尊重。'},
+        {text:'「拍得好好！我微博是<em>{账号}</em>，发了可以艾特我！」',tip:'主动提供社交账号，方便对方@你，也可能帮涨粉。'}
+      ]},
+    ]
+  },
+  {
+    id:'hair', icon:'💇', name:'找毛娘/妆娘', desc:'不知道怎么开口问价格、约时间？从询价到确认，全套模板',
+    pain:'想问又怕被宰',
+    flow:[
+      {tag:'准备',tagType:'yellow',title:'询价前先做功课',scripts:[
+        {text:'提前准备好：<em>角色名、参考图、漫展日期、你的预算范围</em>。',tip:'带参考图去问比空口说「XX角色」清楚 10 倍。预算不用精确，但心里要有个范围。'}
+      ]},
+      {tag:'开口',tagType:'',title:'询价模板',scripts:[
+        {text:'「你好，请问接<em>{角色}</em>的造型吗？{日期}的展，方便报个价吗？我带了参考图给你看～」',tip:'一次性说清角色+时间+需求，给对方省事。加「带了参考图」体现你是做了准备的，不是随便问问。'},
+        {text:'「你好～想约<em>{角色}</em>的毛，你这边工期大概多久呀？有什么需要注意的吗？」',tip:'问工期是实际需求，问「注意事项」是给对方展示专业度的机会——毛娘会觉得你尊重她的专业性。'}
+      ]},
+      {tag:'确认',tagType:'green',title:'确认订单',scripts:[
+        {text:'「好的，那就定{日期}的{角色}造型，费用{金额}。我先付定金，展前一周再确认细节可以吗？」',tip:'主动提定金→体现诚意；预留确认时间→避免展前手忙脚乱。'}
+      ]},
+      {tag:'避雷',tagType:'',title:'这些话别说',redFlags:[
+        '❌ 「能不能便宜点」→ 可以问「有不同价位吗」',
+        '❌ 「我看别人家才 XX 钱」→ 比价是大忌',
+        '❌ 不要催「来得及吗来不及吗」反复问',
+      ]},
+    ]
+  },
+  {
+    id:'social', icon:'📞', name:'漫展后怎么聊', desc:'加了好友不知道怎么开口？从第一次发消息到约下次展，社交破冰指南',
+    pain:'加了好友然后躺列',
+    flow:[
+      {tag:'准备',tagType:'yellow',title:'加好友当天晚上',scripts:[
+        {text:'当天晚上就发，不要拖。过了 48 小时再发就不自然了。',tip:'漫展当天是情绪最高点，趁热打铁效果最好。'}
+      ]},
+      {tag:'开口',tagType:'',title:'第一句话',scripts:[
+        {text:'「今天漫展超开心的！我刚把照片整理了一下，你的<em>{角色}</em>真的太绝了✨」',tip:'用漫展的开心情绪开场 + 夸对方的角色。两个都是安全话题，不会让对方尴尬。'},
+        {text:'「今天谢谢你跟我合影！你的<em>{角色}</em>是我今天看到还原度最高的！」',tip:'具体夸还原度比笼统夸好看更走心。'}
+      ]},
+      {tag:'延续',tagType:'green',title:'自然延续话题',scripts:[
+        {text:'「你下次还去哪个展呀？我可能去<em>{下次漫展}</em>～」',tip:'问下次展是漫展圈最自然的延续话题，比问「你平时干嘛」自然得多。'},
+        {text:'「对了你那个道具/假发是哪家的呀？质感好好！」',tip:'问装备信息——对方会乐意分享，而且话题可以聊很久。'}
+      ]},
+      {tag:'升级',tagType:'purple',title:'约下次一起',scripts:[
+        {text:'「<em>{下次漫展}</em>我也去！到时候可以一起逛吗？我可以帮你拎包（bushi）」',tip:'后半句带点玩笑感，降低邀约的严肃性。被拒绝也不尴尬。'},
+        {text:'「下次展子有机会再集邮！想跟你拍个同作品合影～」',tip:'提前种下「同作品合影」的期待，比单纯说「再约」更具体。'}
+      ]},
+    ]
+  },
 ];
 
-const tones = ['😊 客气', '😎 随意', '🥰 可爱'];
-
-const templates = {
-  photog: [
-    { text:'你好！请问你现在有空吗？想请你帮我拍几张，我出的是{角色}，大概需要10分钟左右就行~', tips:'说明角色+时间预期，摄影师好安排' },
-    { text:'老师好！方便帮忙拍一下吗？随便按几张都行，不用修图！', tips:'降低对方心理负担' },
-    { text:'哈喽～这边需要一位摄影侠！捕捉一只野生{角色}，请求快门支援！📸', tips:'可爱语气，适合轻松氛围' },
-  ],
-  hair: [
-    { text:'你好，请问你接{角色}的造型吗？漫展当天的，方便报个价吗？', tips:'直接说明需求，节省双方时间' },
-    { text:'你好～想约{角色}的毛，你这边工期大概多久呀？', tips:'圈内「毛」=假发造型' },
-    { text:'请问接展妆吗？出{角色}，想要{风格}一点的风格～', tips:'提前说清风格偏好' },
-  ],
-  pic: [
-    { text:'今天漫展你帮我拍的照片，方便发我一下吗？不急，有空传我就行，谢谢！🙏', tips:'加「不急」减轻对方压力' },
-    { text:'哈喽～刚才拍的照片可以发我原图吗？我微博/小红书是{账号}，也可以直接艾特我！', tips:'留联系方式方便对方@你' },
-    { text:'打扰啦，今天展子上的照片能发我一下嘛？想看看效果～', tips:'轻松自然，不显得催' },
-  ],
-  praise: [
-    { text:'哇你这个{角色}还原度好高！！道具都是自己做的吗？好厉害！', tips:'夸细节比泛泛夸更有诚意' },
-    { text:'谢谢！！你的{角色}也超级棒的，我刚刚就在想你出得好好！', tips:'被夸时的自然回复+回夸' },
-    { text:'天哪你这个{角色}太绝了！！请问可以集个邮吗？', tips:'夸+集邮一气呵成' },
-  ],
-  shop: [
-    { text:'请问这套是在哪家买的呀？质感好好，想参考一下～', tips:'用「参考」比直接问更礼貌' },
-    { text:'这个可以便宜一点吗？我今天已经买了三件了555', tips:'略带撒娇，漫展场景适用' },
-    { text:'你好，请问有{角色}的周边吗？或者类似的款也行！', tips:'给摊主留推荐空间' },
-  ],
-  follow: [
-    { text:'上次漫展拍的照片你修好了吗？期待看到！不着急～', tips:'加「不着急」避免施压' },
-    { text:'哈喽！上次展子跟你集邮超开心的，你下次还去哪个展呀？', tips:'用下次展子自然延续话题' },
-    { text:'你的{角色}我发小红书了，要艾特你吗？', tips:'主动问要不要@，是很好的社交信号' },
-  ],
-  help: [
-    { text:'不好意思请问一下，{展厅}怎么走呀？', tips:'漫展现场最常用的求助' },
-    { text:'你好，请问你有多余的发卡/别针/胶带吗？我的道具突然崩了😭', tips:'漫展应急，圈内人都懂' },
-    { text:'打扰了！请问你是在排{活动}吗？方便告诉我排了多久吗？', tips:'排队信息是漫展硬通货' },
-  ],
-  jyp: [
-    { text:'你好！我超喜欢{角色}的，可以跟你合个影吗？', tips:'简单直接，最常用' },
-    { text:'哇你也出{作品}！！我今天也出了{我的角色}，可以一起拍一张吗？🥹', tips:'找到同作品粉丝，共鸣感强' },
-    { text:'你好～请问可以集个邮吗？你的{角色}真的太棒了！', tips:'先夸再问，成功率更高' },
-  ],
-};
-
-let activeScene = 'jyp';
-let activeTone = 0;
-
-// --- Build UI ---
-const tabsEl = document.getElementById('tabs');
-scenes.forEach(s => {
-  const t = document.createElement('div');
-  t.className = 'tab' + (s.id === activeScene ? ' active' : '');
-  t.textContent = s.icon + ' ' + s.name;
-  t.addEventListener('click', () => { activeScene = s.id; activeTone = 0; renderAll(); });
-  tabsEl.appendChild(t);
-});
-
-function renderAll() {
-  // Update tabs
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(`.tab:nth-child(${scenes.findIndex(s=>s.id===activeScene)+1})`).classList.add('active');
-
-  const list = templates[activeScene] || [];
-  const sceneInfo = scenes.find(s => s.id === activeScene);
-
-  const cardList = document.getElementById('cardList');
-  cardList.innerHTML = '';
-
-  if (!list.length) {
-    cardList.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--sub);">🚧 模板收集中，敬请期待</div>';
-    return;
-  }
-
-  list.forEach((tpl, idx) => {
-    const card = document.createElement('div');
-    card.className = 'card';
-
-    const toneLabel = tones[activeTone];
-    const isCurrentTone = activeTone <= 2;
-
-    // Get text based on tone - rotate through templates with tone offset
-    const toneIdx = Math.min(activeTone, list.length - 1);
-    const useTpl = list[toneIdx] || list[0];
-
-    card.innerHTML = `
-      <div class="card-scene">${sceneInfo.icon} ${sceneInfo.name} · 场景${idx+1}</div>
-      <div class="card-tags">
-        <span class="card-tag">${toneLabel}</span>
-        ${tpl.tips ? `<span class="card-tag green">💡 ${tpl.tips}</span>` : ''}
+// ═══════════════════════════ UI ═══════════════════════════════
+function buildMissions() {
+  const grid = document.getElementById('missionGrid');
+  grid.innerHTML = missions.map(m => `
+    <div class="mission" onclick="openMission('${m.id}')">
+      <div class="mission-icon">${m.icon}</div>
+      <div class="mission-info">
+        <div class="mission-name">${m.name}</div>
+        <div class="mission-desc">${m.desc}</div>
       </div>
-      <div class="card-text">${tpl.text}</div>
-      <div class="card-actions">
-        <button class="btn-copy" data-text="${tpl.text.replace(/"/g,'&quot;')}">📋 复制这段话</button>
-        ${activeTone < tones.length - 1 ? `<button class="btn-tone" data-tone="${activeTone+1}">换${tones[activeTone+1].replace(/^[^\s]+\s/,'')}语气 →</button>` : ''}
-        ${activeTone > 0 ? `<button class="btn-tone" data-tone="0">↺ 默认语气</button>` : ''}
+      <div class="mission-arrow">→</div>
+    </div>
+  `).join('');
+}
+
+function openMission(id) {
+  const m = missions.find(x => x.id === id);
+  if (!m) return;
+
+  document.getElementById('homeView').classList.remove('active');
+  document.getElementById('detailView').classList.add('active');
+
+  document.getElementById('missionHero').innerHTML = `
+    <span class="icon">${m.icon}</span>
+    <div class="name">${m.name}</div>
+    <div class="pain">"${m.pain}"</div>
+  `;
+
+  document.getElementById('flowSteps').innerHTML = m.flow.map(step => `
+    <div class="flow-step">
+      <div class="flow-step-header">
+        <span class="flow-step-tag ${step.tagType||''}">${step.tag}</span>
+        <span class="flow-step-title">${step.title}</span>
       </div>
-    `;
+      ${(step.scripts||[]).map(s => `
+        <div class="script-box">
+          <div class="script-label">💬 这样说</div>
+          <div class="script-text">${s.text}</div>
+          ${s.tip ? `<div class="script-tip">${s.tip}</div>` : ''}
+          <button class="btn-copy" onclick="copyText(this,\`${s.text.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`)">📋 复制这段话</button>
+        </div>
+      `).join('')}
+      ${step.psych ? `
+        <div class="psych-box">
+          <div class="label">🧠 为什么有用</div>
+          <div class="text">${step.psych}</div>
+        </div>
+      ` : ''}
+      ${(step.redFlags||[]).map(rf => `
+        <div class="red-flag">
+          <div class="label">⚠️ 避雷</div>
+          <div class="text">${rf}</div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
 
-    // Copy button
-    card.querySelector('.btn-copy').addEventListener('click', function(e) {
-      const text = this.dataset.text;
-      navigator.clipboard.writeText(text).then(() => {
-        this.textContent = '✅ 已复制';
-        this.classList.add('copied');
-        showToast('✅ 已复制，粘贴就能用！');
-        setTimeout(() => {
-          this.textContent = '📋 复制这段话';
-          this.classList.remove('copied');
-        }, 2000);
-      }).catch(() => showToast('📋 请长按文字手动复制'));
-    });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
-    // Tone button
-    card.querySelectorAll('.btn-tone').forEach(btn => {
-      btn.addEventListener('click', function() {
-        activeTone = parseInt(this.dataset.tone);
-        renderAll();
-        document.getElementById('cardList').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    });
+function goHome() {
+  document.getElementById('detailView').classList.remove('active');
+  document.getElementById('homeView').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
-    cardList.appendChild(card);
-  });
+function copyText(btn,text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent='✅ 已复制';
+    btn.classList.add('copied');
+    showToast('✅ 已复制，去粘贴吧！');
+    setTimeout(()=>{btn.textContent='📋 复制这段话';btn.classList.remove('copied');},2000);
+  }).catch(()=>showToast('📋 请长按文字手动复制'));
 }
 
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
 }
 
-// --- Init ---
-renderAll();
+buildMissions();
 </script>
 </body>
 </html>
