@@ -9,9 +9,10 @@
 
   <style>
     :root {
-      --pink: #ff6b9d; --pink-light: #ffe0eb; --purple: #7c3aed; --purple-light: #ede9fe;
-      --bg: #0d0614; --card: rgba(255,255,255,0.08); --text: #fff;
-      --text-secondary: rgba(255,255,255,0.55); --radius: 20px; --radius-sm: 14px;
+      --pink: #ff6b9d; --purple: #7c3aed;
+      --bg: #0d0614; --card: rgba(255,255,255,0.08);
+      --text: #fff; --text-secondary: rgba(255,255,255,0.55);
+      --radius: 20px; --radius-sm: 14px;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -80,13 +81,25 @@
       padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
       cursor: pointer; border: 1.5px solid rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.65); transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
     }
     .filter-chip.active { background: rgba(255,107,157,0.2); border-color: var(--pink); color: #ff9ec4; }
     .border-chip.active { background: rgba(124,58,237,0.2); border-color: var(--purple); color: #a78bfa; }
     .filter-chip:active, .border-chip:active { transform: scale(0.96); }
 
-    .result-wrap { background: rgba(255,255,255,0.04); border-radius: var(--radius); padding: 16px; text-align: center; }
-    .result-wrap canvas { max-width: 100%; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); margin: 0 auto; }
+    .result-wrap {
+      background: rgba(255,255,255,0.04); border-radius: var(--radius); padding: 16px; text-align: center;
+      position: relative;
+    }
+    .result-canvas-stack { position: relative; display: inline-block; }
+    .result-canvas-stack canvas {
+      max-width: 100%; display: block; border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    #filterCanvas {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+    }
     .result-label { font-size: 13px; color: var(--text-secondary); margin-top: 12px; }
 
     .caption-card { background: rgba(255,255,255,0.06); border-radius: var(--radius-sm); padding: 14px 16px; margin-top: 12px; }
@@ -121,11 +134,6 @@
 
     .bg-decor { position: fixed; top: -100px; right: -100px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(255,107,157,0.08), transparent 70%); pointer-events: none; z-index: 0; }
     .bg-decor2 { position: fixed; bottom: -80px; left: -80px; width: 250px; height: 250px; border-radius: 50%; background: radial-gradient(circle, rgba(124,58,237,0.08), transparent 70%); pointer-events: none; z-index: 0; }
-
-    @media (max-width: 380px) {
-      .upload-zone { padding: 24px 16px; }
-      .upload-icon { font-size: 40px; }
-    }
   </style>
 </head>
 <body>
@@ -154,21 +162,13 @@
       </div>
 
       <div class="photo-preview" id="photoPreview">
-        <div class="preview-img-wrap" id="previewWrap">
-          <img id="previewImg" alt="预览" style="max-height:50vh;">
-        </div>
-        <div class="preview-actions">
-          <button class="btn-sm" onclick="retakePhoto()">🔄 重选</button>
-        </div>
+        <div class="preview-img-wrap"><img id="previewImg" alt="预览" style="max-height:50vh;"></div>
+        <div class="preview-actions"><button class="btn-sm" onclick="retakePhoto()">🔄 重选</button></div>
       </div>
 
       <div class="step-title" style="margin-top:8px;">🎭 集到了谁？</div>
-      <div class="char-input-row">
-        <input class="input-char" id="charName" placeholder="角色名（如：蕾姆）" maxlength="20">
-      </div>
-      <div class="char-input-row">
-        <input class="input-char" id="charName2" placeholder="另一个角色（选填）" maxlength="20">
-      </div>
+      <div class="char-input-row"><input class="input-char" id="charName" placeholder="角色名（如：蕾姆）" maxlength="20"></div>
+      <div class="char-input-row"><input class="input-char" id="charName2" placeholder="另一个角色（选填）" maxlength="20"></div>
 
       <button class="btn-primary" id="btnProcess" disabled>✨ 一键美化</button>
       <div class="footer">Cosplan · cosplan.top</div>
@@ -195,7 +195,10 @@
       </div>
 
       <div class="result-wrap">
-        <canvas id="resultCanvas" style="width:100%;"></canvas>
+        <div class="result-canvas-stack" id="canvasStack">
+          <canvas id="resultCanvas" style="display:block;"></canvas>
+          <canvas id="filterCanvas" style="display:none;"></canvas>
+        </div>
         <div class="result-label">👆 长按图片保存到相册</div>
       </div>
 
@@ -218,19 +221,9 @@
 const $=id=>document.getElementById(id);
 let originalImg=null,currentFilter='warm',currentBorder='polaroid',resultBlob=null;
 
-// --- Upload triggers ---
-$('uploadZone').addEventListener('click',()=>{
-  const inp=$('fileInput');
-  inp.value=''; inp.click();
-});
-$('btnCamera').addEventListener('click',()=>{
-  const inp=$('cameraInput');
-  inp.value=''; 
-  // Remove capture on desktop fallback
-  inp.removeAttribute('capture');
-  inp.setAttribute('capture','environment');
-  inp.click();
-});
+// --- Upload ---
+$('uploadZone').addEventListener('click',()=>{const i=$('fileInput');i.value='';i.click();});
+$('btnCamera').addEventListener('click',()=>{const i=$('cameraInput');i.value='';i.setAttribute('capture','environment');i.click();});
 $('fileInput').addEventListener('change',e=>handleFile(e.target.files[0]));
 $('cameraInput').addEventListener('change',e=>handleFile(e.target.files[0]));
 
@@ -240,27 +233,34 @@ function handleFile(file){
   const reader=new FileReader();
   reader.onload=ev=>{
     const img=new Image();
-    img.onload=()=>{
-      originalImg=img;
-      $('previewImg').src=ev.target.result;
-      $('photoPreview').classList.add('active');
-      $('btnProcess').disabled=false;
-    };
-    img.onerror=()=>showToast('❌ 图片加载失败，请重试');
+    img.onload=()=>{originalImg=img;$('previewImg').src=ev.target.result;$('photoPreview').classList.add('active');$('btnProcess').disabled=false;};
+    img.onerror=()=>showToast('❌ 图片加载失败');
     img.src=ev.target.result;
   };
-  reader.onerror=()=>showToast('❌ 读取失败，请重试');
+  reader.onerror=()=>showToast('❌ 读取失败');
   reader.readAsDataURL(file);
 }
+function retakePhoto(){originalImg=null;$('previewImg').src='';$('photoPreview').classList.remove('active');$('fileInput').value='';$('cameraInput').value='';$('btnProcess').disabled=true;}
 
-function retakePhoto(){
-  originalImg=null; $('previewImg').src=''; $('photoPreview').classList.remove('active');
-  $('fileInput').value=''; $('cameraInput').value=''; $('btnProcess').disabled=true;
-}
+// --- Filter chips ---
+$('filterRow').addEventListener('click',e=>{
+  const chip=e.target.closest('.filter-chip');
+  if(!chip)return;
+  currentFilter=chip.dataset.filter;
+  document.querySelectorAll('#filterRow .filter-chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  applyFilter();
+});
 
-// --- Filter & border ---
-document.querySelectorAll('#filterRow .filter-chip').forEach(c=>c.addEventListener('click',()=>{currentFilter=c.dataset.filter;document.querySelectorAll('#filterRow .filter-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');renderResult();}));
-document.querySelectorAll('#borderRow .border-chip').forEach(c=>c.addEventListener('click',()=>{currentBorder=c.dataset.border;document.querySelectorAll('#borderRow .border-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');renderResult();}));
+// --- Border chips ---
+$('borderRow').addEventListener('click',e=>{
+  const chip=e.target.closest('.border-chip');
+  if(!chip)return;
+  currentBorder=chip.dataset.border;
+  document.querySelectorAll('#borderRow .border-chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  renderBorder();
+});
 
 // --- Process ---
 $('btnProcess').addEventListener('click',()=>{
@@ -271,60 +271,112 @@ $('btnProcess').addEventListener('click',()=>{
   window.scrollTo({top:0,behavior:'smooth'});
 });
 
+// --- Filter definitions (CSS filter strings, universally supported) ---
 function getFilterCSS(f){
-  const m={warm:'saturate(1.3) contrast(1.05) brightness(1.08) sepia(0.2) hue-rotate(-10deg)',cool:'saturate(1.1) contrast(1.08) brightness(1.02) hue-rotate(10deg)',anime:'saturate(1.5) contrast(1.1) brightness(1.1)',retro:'saturate(0.7) contrast(1.15) brightness(0.95) sepia(0.3) hue-rotate(-15deg)',none:'none'};
+  const m={
+    warm:'saturate(1.25) contrast(1.05) brightness(1.08) sepia(0.2)',
+    cool:'saturate(1.1) contrast(1.08) brightness(1.02) hue-rotate(10deg)',
+    anime:'saturate(1.4) contrast(1.08) brightness(1.08)',
+    retro:'saturate(0.7) contrast(1.15) brightness(0.95) sepia(0.3)',
+    none:'none'
+  };
   return m[f]||'none';
 }
 
+// --- Border config ---
 function getBorderConfig(b){
   const c={
-    polaroid:{padTop:80,padBottom:60,padSide:40,bgColor:'#f5f0eb',draw:(ctx,w,h,ix,iy,iw,ih)=>{ctx.fillStyle='rgba(0,0,0,0.04)';ctx.fillRect(ix+2,iy+2,iw,ih);}},
-    manga:{padTop:30,padBottom:30,padSide:30,bgColor:'#1a1a2e',draw:(ctx,w,h,ix,iy,iw,ih)=>{
-      ctx.strokeStyle='#fff';ctx.lineWidth=8;ctx.strokeRect(ix-4,iy-4,iw+8,ih+8);
-      ctx.strokeStyle='#e94560';ctx.lineWidth=3;ctx.strokeRect(ix-10,iy-10,iw+20,ih+20);
-      ctx.strokeStyle='#fff';ctx.lineWidth=4;
-      const cs=40;
-      [[ix-14,iy-14,1,1],[ix+iw+14,iy-14,-1,1],[ix-14,iy+ih+14,1,-1],[ix+iw+14,iy+ih+14,-1,-1]].forEach(([cx,cy,dx,dy])=>{ctx.beginPath();ctx.moveTo(cx,cy+dy*cs);ctx.lineTo(cx,cy);ctx.lineTo(cx+dx*cs,cy);ctx.stroke();});
-    }},
-    simple:{padTop:20,padBottom:20,padSide:20,bgColor:'#0d0614',draw:(ctx,w,h,ix,iy,iw,ih)=>{ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ix-1,iy-1,iw+2,ih+2,4);ctx.stroke();}}
+    polaroid:{padTop:80,padBottom:60,padSide:40,bgColor:'#f5f0eb'},
+    manga:{padTop:30,padBottom:30,padSide:30,bgColor:'#1a1a2e'},
+    simple:{padTop:20,padBottom:20,padSide:20,bgColor:'#0d0614'}
   };
   return c[b]||c.simple;
 }
 
+// --- Main render (base image + border) ---
+let cropData=null;
 function renderResult(){
   if(!originalImg)return;
-  const canvas=$('resultCanvas'),ctx=canvas.getContext('2d'),img=originalImg;
+  const img=originalImg;
   let sw=img.width,sh=img.height;
   const outW=810,outH=1080,targetRatio=3/4;
   let cropW,cropH,cropX,cropY;
   if(sw/sh>targetRatio){cropH=sh;cropW=sh*targetRatio;cropX=(sw-cropW)/2;cropY=0;}
   else{cropW=sw;cropH=sw/targetRatio;cropX=0;cropY=Math.max(0,(sh-cropH)*0.3);}
+  cropData={img,cropX,cropY,cropW,cropH,outW,outH};
+
+  renderBorder();
+  applyFilter();
+}
+
+// --- Render border (the frame + text, no filter) ---
+function renderBorder(){
+  if(!cropData)return;
+  const {img,cropX,cropY,cropW,cropH,outW,outH}=cropData;
+  const canvas=$('resultCanvas'),ctx=canvas.getContext('2d');
   const cfg=getBorderConfig(currentBorder);
   const padTop=cfg.padTop,padBottom=cfg.padBottom,padSide=cfg.padSide;
+
   canvas.width=outW;canvas.height=outH;
   ctx.fillStyle=cfg.bgColor||'#0d0614';ctx.fillRect(0,0,outW,outH);
   const ix=padSide,iy=padTop,iw=outW-padSide*2,ih=outH-padTop-padBottom;
-  ctx.save();ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();
-  const fcss=getFilterCSS(currentFilter);
-  if(fcss!=='none')ctx.filter=fcss;
+
+  // Draw IMAGE (no filter here - filter applied via CSS on overlay)
   ctx.drawImage(img,cropX,cropY,cropW,cropH,ix,iy,iw,ih);
-  ctx.filter='none';ctx.restore();
-  if(cfg.draw)cfg.draw(ctx,outW,outH,ix,iy,iw,ih);
-  drawTextOverlay(ctx,outW,outH,ix,iy,iw,ih,cfg);
-  canvas.toBlob(blob=>{resultBlob=blob;},'image/jpeg',0.92);
+
+  // Border decorations
+  if(currentBorder==='polaroid'){
+    ctx.fillStyle='rgba(0,0,0,0.04)';ctx.fillRect(ix+2,iy+2,iw,ih);
+  }else if(currentBorder==='manga'){
+    ctx.strokeStyle='#fff';ctx.lineWidth=8;ctx.strokeRect(ix-4,iy-4,iw+8,ih+8);
+    ctx.strokeStyle='#e94560';ctx.lineWidth=3;ctx.strokeRect(ix-10,iy-10,iw+20,ih+20);
+    ctx.strokeStyle='#fff';ctx.lineWidth=4;
+    const cs=40;
+    [[ix-14,iy-14,1,1],[ix+iw+14,iy-14,-1,1],[ix-14,iy+ih+14,1,-1],[ix+iw+14,iy+ih+14,-1,-1]].forEach(([cx,cy,dx,dy])=>{ctx.beginPath();ctx.moveTo(cx,cy+dy*cs);ctx.lineTo(cx,cy);ctx.lineTo(cx+dx*cs,cy);ctx.stroke();});
+  }else{
+    ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ix-1,iy-1,iw+2,ih+2,4);ctx.stroke();
+  }
+
+  // Text overlay
+  drawTextOverlay(ctx,outW,outH,ix,iy,iw,ih,cfg,padBottom);
 }
 
-function drawTextOverlay(ctx,w,h,ix,iy,iw,ih,cfg){
+// --- Apply filter via CSS (on overlay canvas clone) ---
+function applyFilter(){
+  if(!cropData)return;
+  const fcss=getFilterCSS(currentFilter);
+  const mainCanvas=$('resultCanvas');
+  const filterCanvas=$('filterCanvas');
+
+  if(fcss==='none'){
+    filterCanvas.style.display='none';
+    return;
+  }
+
+  // Clone the base canvas and apply CSS filter
+  filterCanvas.width=mainCanvas.width;
+  filterCanvas.height=mainCanvas.height;
+  const fctx=filterCanvas.getContext('2d');
+  fctx.clearRect(0,0,filterCanvas.width,filterCanvas.height);
+  fctx.drawImage(mainCanvas,0,0);
+
+  // Apply CSS filter to the canvas element
+  filterCanvas.style.display='block';
+  filterCanvas.style.filter=fcss;
+  filterCanvas.style.webkitFilter=fcss;
+}
+
+function drawTextOverlay(ctx,w,h,ix,iy,iw,ih,cfg,padBottom){
   const n1=$('charName').value.trim(),n2=$('charName2').value.trim();
   if(!n1&&!n2)return;
   const isP=currentBorder==='polaroid',isM=currentBorder==='manga';
   if(isP){
     ctx.fillStyle='#333';ctx.font='600 28px "PingFang SC","Microsoft YaHei",sans-serif';ctx.textAlign='center';
     let l=n1;if(n2)l+=`  ×  ${n2}`;
-    ctx.fillText(l,w/2,h-cfg.padBottom/2+6);
+    ctx.fillText(l,w/2,h-padBottom/2+6);
   }else if(isM){
     const taH=80;
-    const g=ctx.createLinearGradient(0,h-cfg.padBottom-taH,0,h-cfg.padBottom);
+    const g=ctx.createLinearGradient(0,h-padBottom-taH,0,h-padBottom);
     g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(0.5,'rgba(0,0,0,0.4)');g.addColorStop(1,'rgba(0,0,0,0.7)');
     ctx.fillStyle=g;ctx.fillRect(ix,iy+ih-taH,iw,taH);
     ctx.fillStyle='#fff';ctx.font='700 32px "PingFang SC","Microsoft YaHei",sans-serif';ctx.textAlign='center';
@@ -351,18 +403,47 @@ function updateCaption(){
 
 function copyCaption(){
   const t=$('captionText').textContent;
-  navigator.clipboard.writeText(t).then(()=>showToast('✅ 文案已复制，去朋友圈发吧！')).catch(()=>showToast('📋 请长按上方文案手动复制'));
+  navigator.clipboard.writeText(t).then(()=>showToast('✅ 已复制！')).catch(()=>showToast('📋 请长按文案手动复制'));
 }
 
 function downloadResult(){
-  if(!resultBlob)return;
-  const url=URL.createObjectURL(resultBlob),a=document.createElement('a');
-  a.href=url;a.download='集邮_Cosplan.jpg';document.body.appendChild(a);a.click();
-  document.body.removeChild(a);URL.revokeObjectURL(url);
-  showToast('💾 保存成功！发朋友圈吧～');
+  // Merge filter + base canvas into one for download
+  const mergeCanvas=document.createElement('canvas');
+  const mainCanvas=$('resultCanvas');
+  const filterCanvas=$('filterCanvas');
+  mergeCanvas.width=mainCanvas.width;
+  mergeCanvas.height=mainCanvas.height;
+  const mctx=mergeCanvas.getContext('2d');
+  mctx.drawImage(mainCanvas,0,0);
+  if(filterCanvas.style.display!=='none'){
+    // Apply CSS filter to merge canvas for download
+    const fcss=getFilterCSS(currentFilter);
+    const tmpCanvas=document.createElement('canvas');
+    tmpCanvas.width=mergeCanvas.width;tmpCanvas.height=mergeCanvas.height;
+    const tctx=tmpCanvas.getContext('2d');
+    tctx.drawImage(mainCanvas,0,0);
+    // Use ctx.filter for download (works on modern browsers)
+    try{
+      mctx.clearRect(0,0,mergeCanvas.width,mergeCanvas.height);
+      mctx.filter=fcss;
+      mctx.drawImage(tmpCanvas,0,0);
+      mctx.filter='none';
+    }catch(e){
+      // Fallback: no filter on download
+      mctx.drawImage(tmpCanvas,0,0);
+    }
+  }
+  mergeCanvas.toBlob(blob=>{
+    resultBlob=blob;
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='集邮_Cosplan.jpg';document.body.appendChild(a);a.click();
+    document.body.removeChild(a);URL.revokeObjectURL(url);
+    showToast('💾 保存成功！');
+  },'image/jpeg',0.92);
 }
 
 function shareResult(){
+  downloadForShare();
   if(navigator.share&&resultBlob){
     const file=new File([resultBlob],'集邮照.jpg',{type:'image/jpeg'});
     navigator.share({title:'Cosplan 集邮快修',text:$('captionText').textContent,files:[file]}).catch(()=>{});
@@ -371,11 +452,25 @@ function shareResult(){
   }else{downloadResult();}
 }
 
+function downloadForShare(){
+  const mergeCanvas=document.createElement('canvas');
+  const mainCanvas=$('resultCanvas');
+  mergeCanvas.width=mainCanvas.width;mergeCanvas.height=mainCanvas.height;
+  const mctx=mergeCanvas.getContext('2d');
+  mctx.drawImage(mainCanvas,0,0);
+  const fcss=getFilterCSS(currentFilter);
+  if(fcss!=='none'){
+    try{mctx.filter=fcss;mctx.drawImage(mainCanvas,0,0);mctx.filter='none';}catch(e){}
+  }
+  mergeCanvas.toBlob(blob=>{resultBlob=blob;},'image/jpeg',0.92);
+}
+
 function resetAll(){
-  originalImg=null;$('previewImg').src='';$('photoPreview').classList.remove('active');
+  originalImg=null;cropData=null;$('previewImg').src='';$('photoPreview').classList.remove('active');
   $('fileInput').value='';$('cameraInput').value='';
   $('charName').value='';$('charName2').value='';
   currentFilter='warm';currentBorder='polaroid';resultBlob=null;
+  $('filterCanvas').style.display='none';
   document.querySelectorAll('#filterRow .filter-chip').forEach(c=>c.classList.toggle('active',c.dataset.filter==='warm'));
   document.querySelectorAll('#borderRow .border-chip').forEach(c=>c.classList.toggle('active',c.dataset.border==='polaroid'));
   $('stepEdit').classList.remove('active');$('stepUpload').classList.add('active');
@@ -384,10 +479,8 @@ function resetAll(){
 
 function showToast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
-// Live preview on name change
 ['charName','charName2'].forEach(id=>$(id).addEventListener('input',()=>{if($('stepEdit').classList.contains('active')){renderResult();updateCaption();}}));
 
-// roundRect polyfill
 if(!CanvasRenderingContext2D.prototype.roundRect){
   CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
     if(typeof r==='number')r={tl:r,tr:r,br:r,bl:r};
