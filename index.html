@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cosplan - 漫展出片助手</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+
+  <style>
+    :root {
+      --pink: #ff6b9d;
+      --pink-light: #ffe0eb;
+      --purple: #7c3aed;
+      --purple-light: #ede9fe;
+      --bg: #fdf2f8;
+      --card: rgba(255,255,255,0.85);
+      --card-solid: #ffffff;
+      --text: #1e1b4b;
+      --text-secondary: #6b7280;
+      --border: #fce7f3;
+      --shadow: 0 4px 24px rgba(255, 107, 157, 0.12);
+      --radius: 20px;
+      --radius-sm: 14px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #1a0a20;
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* ===== COS 图片流动背景 ===== */
+    .cos-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .cos-layer {
+      position: absolute;
+      display: flex;
+      gap: 16px;
+      height: 140px;
+      opacity: 0.18;
+    }
+
+    .cos-layer.layer-1 {
+      top: 5%;
+      animation: scrollLTR 60s linear infinite;
+    }
+
+    .cos-layer.layer-2 {
+      top: 28%;
+      animation: scrollRTL 50s linear infinite;
+      opacity: 0.22;
+    }
+
+    .cos-layer.layer-3 {
+      top: 52%;
+      animation: scrollLTR 55s linear infinite;
+      opacity: 0.16;
+    }
+
+    .cos-layer.layer-4 {
+      top: 75%;
+      animation: scrollRTL 45s linear infinite;
+      opacity: 0.2;
+    }
+
+    /* 每层里面的卡片 */
+    .cos-img-card {
+      width: 100px;
+      height: 140px;
+      border-radius: 12px;
+      flex-shrink: 0;
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+
+    @keyframes scrollLTR {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    @keyframes scrollRTL {
+      0%   { transform: translateX(-50%); }
+      100% { transform: translateX(0); }
+    }
+
+    /* 底部暗色渐变遮罩 */
+    .cos-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(26,10,32,0.3) 0%, rgba(26,10,32,0.7) 60%, rgba(26,10,32,0.95) 100%);
+      pointer-events: none;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+      padding: 0 16px 120px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      text-align: center;
+      padding: 56px 0 32px;
+    }
+
+    .header .logo-text {
+      color: #fff !important;
+      -webkit-text-fill-color: #fff !important;
+      background: none !important;
+    }
+
+    .header .tagline {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .header .tagline span {
+      background: rgba(255,107,157,0.3);
+      color: #ff9ec4;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .logo-icon {
+      font-size: 40px;
+      line-height: 1;
+    }
+
+    .logo-text {
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+    }
+
+    .tagline {
+      font-size: 15px;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+    }
+
+    .tagline span {
+      background: var(--pink-light);
+      color: var(--pink);
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    /* ---- 输入卡片（毛玻璃） ---- */
+    .input-card {
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .input-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--pink), var(--purple));
+    }
+
+    .input-label {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+    }
+
+    .input-hint {
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 16px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .input-char {
+      flex: 1;
+      height: 52px;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      border-radius: var(--radius-sm);
+      padding: 0 16px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+
+    .input-char:focus {
+      border-color: var(--pink);
+      background: rgba(255,255,255,0.18);
+    }
+
+    .input-char::placeholder {
+      color: rgba(255,255,255,0.4);
+    }
+
+    .btn-go {
+      height: 52px;
+      padding: 0 28px;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      white-space: nowrap;
+      letter-spacing: 1px;
+    }
+
+    .btn-go:active {
+      transform: scale(0.96);
+    }
+
+    .btn-go:hover {
+      box-shadow: 0 8px 24px rgba(255, 107, 157, 0.35);
+    }
+
+    .btn-go:disabled {
+      opacity: 0.5;
+      transform: none;
+      cursor: not-allowed;
+    }
+
+    .quick-chars {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .quick-char {
+      padding: 6px 14px;
+      background: rgba(255,107,157,0.2);
+      color: #ff9ec4;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid rgba(255,107,157,0.25);
+    }
+
+    .quick-char:active {
+      background: rgba(255,107,157,0.5);
+      color: #fff;
+      transform: scale(0.95);
+    }
+
+    /* ---- Step 卡片 ---- */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .step-card {
+      background: rgba(255,255,255,0.85);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      transition: transform 0.2s, box-shadow 0.2s;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .step-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      color: #fff;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .step-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .step-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .step-tag {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 12px;
+      background: var(--purple-light);
+      color: var(--purple);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* ---- 加载状态 ---- */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(26, 10, 32, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      gap: 20px;
+    }
+
+    .loading-overlay.hidden {
+      display: none;
+    }
+
+    .spinner {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: conic-gradient(var(--pink), var(--purple), var(--pink));
+      animation: spin 0.8s linear infinite;
+      mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 0);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 0);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ff9ec4;
+    }
+
+    .loading-step {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      min-height: 20px;
+    }
+
+    /* ---- 结果区域 ---- */
+    .result-section {
+      display: none;
+    }
+
+    .result-section.active {
+      display: block;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 28px 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+    }
+
+    .section-title span {
+      color: rgba(255,255,255,0.5) !important;
+    }
+
+    .pose-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .pose-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .pose-card:active {
+      transform: scale(0.97);
+    }
+
+    .pose-img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: linear-gradient(135deg, rgba(255,107,157,0.3), rgba(124,58,237,0.3));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pose-img::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40%;
+      background: linear-gradient(transparent, rgba(0,0,0,0.3));
+    }
+
+    .pose-label {
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      color: rgba(255,255,255,0.85);
+    }
+
+    /* ---- 滤镜 ---- */
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .filter-card {
+      flex-shrink: 0;
+      width: 120px;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .filter-name {
+      color: rgba(255,255,255,0.85);
+    }
+
+    .filter-card:active {
+      transform: scale(0.96);
+    }
+
+    .filter-preview {
+      width: 100%;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+    }
+
+    .filter-preview.warm {
+      background: linear-gradient(135deg, #fef3c7, #fcd34d40);
+      color: #f59e0b;
+    }
+
+    .filter-preview.cool {
+      background: linear-gradient(135deg, #dbeafe, #93c5fd40);
+      color: #3b82f6;
+    }
+
+    .filter-preview.anime {
+      background: linear-gradient(135deg, #fce7f3, #f9a8d440);
+      color: #ec4899;
+    }
+
+    .filter-name {
+      padding: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+    }
+
+    /* ---- 文案 ---- */
+    .caption-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .caption-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .caption-text {
+      color: rgba(255,255,255,0.85);
+    }
+
+    .caption-platform {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ff9ec4;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .caption-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 10px;
+    }
+
+    .caption-copy {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--purple);
+      cursor: pointer;
+      padding: 6px 12px;
+      background: var(--purple-light);
+      border-radius: 20px;
+      display: inline-block;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .caption-copy:active {
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .caption-copy.copied {
+      background: #10b981;
+      color: #fff;
+    }
+
+    /* ---- 底部 ---- */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(26,10,32,0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding: 16px;
+      display: flex;
+      gap: 10px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .btn-outline {
+      flex: 1;
+      height: 48px;
+      border: 1.5px solid rgba(255,107,157,0.5);
+      background: rgba(255,255,255,0.08);
+      color: #ff9ec4;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-outline:active {
+      background: rgba(255,107,157,0.2);
+    }
+
+    .btn-primary {
+      flex: 2;
+      height: 48px;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 1px;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e1b4b;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 200;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    /* ---- 空结果 ---- */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      display: block;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .empty-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .empty-desc {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.5;
+    }
+
+    /* ---- 价格 ---- */
+    .price-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      color: #92400e;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pricing-banner {
+      background: rgba(254,243,199,0.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1.5px dashed rgba(251,191,36,0.4);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 20px;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .pricing-banner .big {
+      font-size: 28px;
+      font-weight: 800;
+      color: #ff9ec4;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== COS 图片流动背景 ===== -->
+<div class="cos-bg" id="cosBg">
+  <div class="cos-layer layer-1" id="layer1"></div>
+  <div class="cos-layer layer-2" id="layer2"></div>
+  <div class="cos-layer layer-3" id="layer3"></div>
+  <div class="cos-layer layer-4" id="layer4"></div>
+</div>
+
+<div class="app" id="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo-row">
+      <span class="logo-icon">🎬</span>
+      <span class="logo-text">Cosplan</span>
+    </div>
+    <p class="tagline">漫展出片助手 · <span>输入角色，一键出全套方案</span></p>
+  </header>
+
+  <!-- 输入卡片 -->
+  <div class="input-card">
+    <div class="input-label">🎭 你要出哪个角色？</div>
+    <div class="input-hint">输入角色名，Cosplan 帮你搞定一切</div>
+    <div class="input-row">
+      <input
+        type="text"
+        class="input-char"
+        id="charInput"
+        placeholder="比如：蕾姆、甘露寺蜜璃、五条悟…"
+        autocomplete="off"
+      >
+      <button class="btn-go" id="btnGo" onclick="doGenerate()">出片</button>
+    </div>
+    <div class="quick-chars">
+      <button class="quick-char" onclick="quickPick('蕾姆')">蕾姆</button>
+      <button class="quick-char" onclick="quickPick('甘露寺蜜璃')">甘露寺蜜璃</button>
+      <button class="quick-char" onclick="quickPick('五条悟')">五条悟</button>
+      <button class="quick-char" onclick="quickPick('时崎狂三')">时崎狂三</button>
+    </div>
+  </div>
+
+  <!-- 空状态（默认） -->
+  <div class="empty-state" id="emptyState">
+    <span class="empty-icon">🎌</span>
+    <div class="empty-title">输入角色名，一键出片</div>
+    <div class="empty-desc">
+      Pose 参考图 · 滤镜预设 · 发布文案<br>
+      全部帮你搞定，照着抄就行 ✨
+    </div>
+  </div>
+
+  <!-- 加载遮罩 -->
+  <div class="loading-overlay hidden" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">正在生成中...</div>
+    <div class="loading-step" id="loadingStep">🎨 AI 正在画 pose 参考图</div>
+  </div>
+
+  <!-- 结果区域 -->
+  <div class="result-section" id="resultSection">
+
+    <!-- Pose 参考图 -->
+    <div class="section-title">📸 Pose 参考图 <span style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-left:auto;">照着摆就行</span></div>
+    <div class="pose-grid" id="poseGrid"></div>
+
+    <!-- 快速滤镜 -->
+    <div class="section-title">🎨 快速滤镜 <span style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-left:auto;">发朋友圈够了</span></div>
+    <div class="filter-row">
+      <div class="filter-card" onclick="applyFilter('warm')">
+        <div class="filter-preview warm">🌅</div>
+        <div class="filter-name">暖调动漫</div>
+      </div>
+      <div class="filter-card" onclick="applyFilter('cool')">
+        <div class="filter-preview cool">❄️</div>
+        <div class="filter-name">冷调高级</div>
+      </div>
+      <div class="filter-card" onclick="applyFilter('anime')">
+        <div class="filter-preview anime">🌸</div>
+        <div class="filter-name">日系胶片</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-secondary);margin-top:8px;text-align:center;">
+      ⚡ 一键套用，比什么都不修强，而且够快
+    </div>
+
+    <!-- 发布文案 -->
+    <div class="section-title">📱 发布文案 <span style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-left:auto;">一键复制</span></div>
+    <div class="caption-list" id="captionList"></div>
+
+    <!-- 定价 -->
+    <div class="pricing-banner">
+      <span>首次</span> <span class="big">免费</span><br>
+      <span style="font-size:13px;color:var(--text-secondary);">之后 ¥9.9 无限生成</span>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+  // ========== COS 背景图（占位） ==========
+  // 真实产品替换为 cos 正片 URL
+  const cosImages = [
+    'https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=200&h=280&fit=crop',  // coser with sword
+    'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&h=280&fit=crop',  // concert lights
+    'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=200&h=280&fit=crop',  // stage
+    'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=280&fit=crop',  // music
+    'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=200&h=280&fit=crop',  // festival
+    'https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=200&h=280&fit=crop',  // live show
+    'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=200&h=280&fit=crop',  // crowd
+    'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=200&h=280&fit=crop',  // performance
+    'https://images.unsplash.com/photo-1571266028243-e4733b0f732f?w=200&h=280&fit=crop',  // anime style
+    'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=200&h=280&fit=crop',  // movie
+    'https://images.unsplash.com/photo-1503095396549-807759245b35?w=200&h=280&fit=crop',  // sunset
+    'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=200&h=280&fit=crop',  // neon
+  ];
+
+  function buildLayer(layerId, count) {
+    const layer = document.getElementById(layerId);
+    // 复制两份以保证无缝循环
+    for (let dup = 0; dup < 2; dup++) {
+      for (let i = 0; i < count; i++) {
+        const card = document.createElement('div');
+        card.className = 'cos-img-card';
+        const img = cosImages[(i + (dup * 7)) % cosImages.length];
+        card.style.backgroundImage = `url(${img})`;
+        // 随机微调透明度
+        card.style.opacity = 0.5 + Math.random() * 0.5;
+        layer.appendChild(card);
+      }
+    }
+  }
+
+  buildLayer('layer1', 8);
+  buildLayer('layer2', 10);
+  buildLayer('layer3', 8);
+  buildLayer('layer4', 10);
+
+  const poseData = {
+    pose1: { emoji: '🧍', label: '经典站姿', tip: '双手自然垂放，体态放松' },
+    pose2: { emoji: '🪑', label: '侧坐', tip: '侧身坐下，双腿并拢微侧' },
+    pose3: { emoji: '🙏', label: '双手合十', tip: '闭眼低头，适合温柔角色' },
+    pose4: { emoji: '👀', label: '回眸', tip: '侧身回头，眼神看镜头' },
+    pose5: { emoji: '🗡️', label: '武器持握', tip: '双手持武器，重心压低' },
+    pose6: { emoji: '🧎', label: '跪姿', tip: '单膝或双膝跪地，身体微倾' },
+    pose7: { emoji: '🏃', label: '动态奔跑', tip: '头发和裙摆自然飘动' },
+    pose8: { emoji: '🪞', label: '看镜子', tip: '手持小道具，眼神看向一侧' },
+    pose9: { emoji: '💪', label: '战斗姿态', tip: '身体侧对镜头，准备战斗' },
+    pose10: { emoji: '😊', label: '正面微笑', tip: '正对镜头，表情自然微笑' },
+  };
+
+  const captions = [
+    {
+      platform: 'QQ空间',
+      text: '今天出了【{角色}】！\n感谢摄影大大 @XX 的返图 🙏\n\n这套拍得超满意，大家觉得怎么样？\n#cos #{角色}cos #漫展 #正片',
+    },
+    {
+      platform: '抖音 / 小红书',
+      text: 'cos【{角色}】的一天 ✨\n\n从准备到成片，全是 Cosplan 帮我搞定的！\nPose 照着图摆就行，修图一键出片，文案也不用想了\n\n懒人出片天花板 🎬\n#cos #{角色} #出片助手 #漫展',
+    },
+    {
+      platform: '微博',
+      text: '【{角色}】正片掉落 📸\n\n妆造：@XX妆娘\n摄影：@XX\n后期：Cosplan 快速滤镜\n\n快修出图真的方便，精修还在等（已经等了半个月了 orz\n#cos #{角色}cos #正片 #cos正片',
+    },
+  ];
+
+  // ========== 交互逻辑 ==========
+  const charInput = document.getElementById('charInput');
+  const btnGo = document.getElementById('btnGo');
+  const emptyState = document.getElementById('emptyState');
+  const resultSection = document.getElementById('resultSection');
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  const loadingStep = document.getElementById('loadingStep');
+  const poseGrid = document.getElementById('poseGrid');
+  const captionList = document.getElementById('captionList');
+  const toast = document.getElementById('toast');
+
+  let currentChar = '';
+
+  // 快捷选择
+  function quickPick(name) {
+    charInput.value = name;
+    doGenerate();
+  }
+
+  // 回车触发
+  charInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doGenerate();
+  });
+
+  // 生成流程
+  async function doGenerate() {
+    const name = charInput.value.trim();
+    if (!name) {
+      showToast('请输入角色名');
+      charInput.focus();
+      return;
+    }
+
+    currentChar = name;
+    btnGo.disabled = true;
+    btnGo.textContent = '...';
+    emptyState.style.display = 'none';
+    resultSection.classList.remove('active');
+    loadingOverlay.classList.remove('hidden');
+
+    // 模拟生成步骤
+    const steps = [
+      { text: '🎨 AI 正在画 pose 参考图...', delay: 800 },
+      { text: '🖼️ 正在生成角色 cos 效果...', delay: 700 },
+      { text: '🎬 准备滤镜预设...', delay: 500 },
+      { text: '📝 撰写各平台发布文案...', delay: 600 },
+      { text: '✨ 整理输出...', delay: 400 },
+    ];
+
+    for (const step of steps) {
+      loadingStep.textContent = step.text;
+      await sleep(step.delay);
+    }
+
+    // 渲染结果
+    renderPoses(name);
+    renderCaptions(name);
+
+    loadingOverlay.classList.add('hidden');
+    resultSection.classList.add('active');
+    btnGo.disabled = false;
+    btnGo.textContent = '出片';
+
+    // 滚动到结果
+    resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    showToast('✅ 生成完成！');
+  }
+
+  // 渲染 Pose 卡片
+  function renderPoses(name) {
+    poseGrid.innerHTML = '';
+    const colors = ['#fce7f3', '#ede9fe', '#dbeafe', '#fef3c7', '#fce7f3'];
+    let i = 0;
+    for (const [key, data] of Object.entries(poseData)) {
+      const card = document.createElement('div');
+      card.className = 'pose-card';
+      card.onclick = () => showToast(`💡 ${data.tip}`);
+      card.innerHTML = `
+        <div class="pose-img" style="background:linear-gradient(135deg, ${colors[i%5]}, ${colors[(i+1)%5]});">
+          <span>${data.emoji}</span>
+        </div>
+        <div class="pose-label">${i+1}. ${data.label}</div>
+      `;
+      poseGrid.appendChild(card);
+      i++;
+    }
+  }
+
+  // 渲染文案
+  function renderCaptions(name) {
+    captionList.innerHTML = '';
+    captions.forEach((cap, idx) => {
+      const text = cap.text.replace(/\{角色\}/g, name);
+      const card = document.createElement('div');
+      card.className = 'caption-card';
+      card.innerHTML = `
+        <div class="caption-platform">${cap.platform}</div>
+        <div class="caption-text">${text.replace(/\n/g, '<br>')}</div>
+        <button class="caption-copy" id="copyBtn${idx}" onclick="copyCaption(${idx}, '${escapeHtml(text)}')">📋 一键复制</button>
+      `;
+      captionList.appendChild(card);
+    });
+  }
+
+  // 复制文案
+  function copyCaption(idx, text) {
+    const decoded = text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/<br>/g, '\n');
+    navigator.clipboard.writeText(decoded).then(() => {
+      const btn = document.getElementById('copyBtn' + idx);
+      btn.textContent = '✅ 已复制';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📋 一键复制';
+        btn.classList.remove('copied');
+      }, 2000);
+      showToast('📋 文案已复制！');
+    }).catch(() => {
+      showToast('复制失败，请手动长按复制');
+    });
+  }
+
+  // 滤镜 - 模拟
+  function applyFilter(type) {
+    const names = { warm: '暖调动漫', cool: '冷调高级', anime: '日系胶片' };
+    showToast('🎨 已套用「' + names[type] + '」滤镜');
+  }
+
+  // Toast
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toast._timeout);
+    toast._timeout = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2000);
+  }
+
+  // 工具函数
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+</script>
+
+</body>
+</html>
