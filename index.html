@@ -6,7 +6,7 @@
   <title>Cosplan · 角色快诊</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js'"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js" onerror="var s=this;s.onerror=null;s.src='https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js';s.addEventListener('error',function(){var l=document.createElement('script');l.src='face-api.min.js';document.head.appendChild(l)})
   <style>
     :root {
       --pink:#ff6b9d;--purple:#7c3aed;--bg:#0d0614;--card:rgba(255,255,255,0.06);
@@ -238,12 +238,20 @@ async function loadModels() {
   if (modelsLoaded) return;
   showLoading('加载 AI 模型...');
   try {
+    // Wait for face-api to be available (CDN may be slow in China)
+    let waited = 0;
+    while (typeof faceapi === 'undefined' || !faceapi.nets) {
+      if (waited > 30) throw new Error('face-api.js CDN 超时');
+      await new Promise(r => setTimeout(r, 1000));
+      waited++;
+    }
     await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
     await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
     modelsLoaded = true;
   } catch(e) {
-    showToast('⚠️ 模型加载失败，请刷新重试');
     console.error('Model load error:', e);
+    const msg = e.message && e.message.includes('CDN') ? '⚠️ CDN加载超时，请检查网络后刷新' : '⚠️ 模型加载失败，请刷新重试';
+    showToast(msg);
   }
   hideLoading();
 }
@@ -273,13 +281,15 @@ document.getElementById('btnRetake').addEventListener('click', () => {
   updateBtn();
 });
 
-async function loadImageFile(file) {
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    const img = await faceapi.bufferToImage(file);
+function loadImageFile(file) {
+  // Use native Image API (not faceapi) to avoid CDN dependency for preview
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
     displayCapturedImage(img);
+    URL.revokeObjectURL(url);
   };
-  reader.readAsDataURL(file);
+  img.src = url;
 }
 
 function displayCapturedImage(img) {
@@ -300,6 +310,7 @@ function displayCapturedImage(img) {
 // ═══════ FACE ANALYSIS ═══════
 document.getElementById('btnAnalyze').addEventListener('click', async () => {
   await loadModels();
+  if (!modelsLoaded) return; // loadModels showed error toast already
   showLoading('分析面部特征...');
   try {
     const detection = await faceapi.detectSingleFace(captureCanvas, new faceapi.TinyFaceDetectorOptions({inputSize:320})).withFaceLandmarks();
@@ -560,8 +571,7 @@ function updateBtn() {
 }
 document.getElementById('btnDiagnose').addEventListener('click',diagnose);
 
-// Preload models
-loadModels().catch(() => {});
+// Models will be loaded on-demand when user uploads a photo (in loadImageFile)
 </script>
 </body>
 </html>
