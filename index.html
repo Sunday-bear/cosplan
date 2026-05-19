@@ -6,7 +6,7 @@
   <title>Cosplan · 角色快诊</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js" onerror="var s=this;s.onerror=null;s.src='https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js';s.addEventListener('error',function(){var l=document.createElement('script');l.src='face-api.min.js';document.head.appendChild(l)})
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js" onerror="var s=this;s.onerror=null;s.src='https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js';s.addEventListener('error',function(){var l=document.createElement('script');l.src='face-api.min.js';document.head.appendChild(l)})"></script>
   <style>
     :root {
       --pink:#ff6b9d;--purple:#7c3aed;--bg:#0d0614;--card:rgba(255,255,255,0.06);
@@ -89,13 +89,35 @@
     .result-header .match-sub{font-size:13px;color:var(--sub)}
     .char-card{
       background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:18px;
+      border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:0 18px 18px;
       margin-bottom:12px;position:relative;overflow:hidden;
     }
     .char-card.premium{opacity:0.45;filter:blur(5px);pointer-events:none}
-    .char-rank{position:absolute;top:0;right:16px;font-size:56px;font-weight:800;color:rgba(255,255,255,0.025);line-height:1;pointer-events:none}
-    .char-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-    .char-avatar{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;background:rgba(255,107,157,0.12)}
+    .char-rank{position:absolute;top:8px;right:16px;font-size:56px;font-weight:800;color:rgba(255,255,255,0.025);line-height:1;pointer-events:none;z-index:0}
+    
+    /* Character image */
+    .char-img-wrap{
+      width:calc(100% + 36px);margin:0 -18px 14px;height:180px;overflow:hidden;
+      background:rgba(124,58,237,0.08);position:relative;
+    }
+    .char-img{
+      width:100%;height:100%;object-fit:cover;object-position:top;
+      display:block;transition:transform 0.3s;
+    }
+    .char-card:hover .char-img{transform:scale(1.03)}
+    .char-img-fallback{
+      width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      position:absolute;top:0;left:0;
+    }
+    .char-img-initial{
+      font-size:64px;font-weight:800;color:rgba(255,255,255,0.25);
+      text-shadow:0 2px 20px rgba(0,0,0,0.5);line-height:1;
+    }
+    .char-img-label{
+      font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:2px;margin-top:4px;
+    }
+    
+    .char-header{display:flex;align-items:center;gap:12px;margin-bottom:10px;position:relative;z-index:1}
     .char-info{flex:1}
     .char-name{font-size:18px;font-weight:700}
     .char-series{font-size:12px;color:var(--sub)}
@@ -226,7 +248,7 @@ const options = {
     {v:'female',label:'女性角色'},{v:'male',label:'男性角色'},{v:'any',label:'不限'},
   ],
   budget:[
-    {v:'low',label:'500以内'},{v:'mid',label:'500-2000'},{v:'high',label:'2000+'},{v:'any',label:'不限'},
+    {v:'low',label:'500以内'},{v:'mid-low',label:'500-1000'},{v:'mid',label:'1000-2000'},{v:'high',label:'2000+'},{v:'any',label:'不限'},
   ],
 };
 
@@ -399,46 +421,46 @@ function updateBtn() {
 
 // ═══════ CHARACTER DB ═══════
 const characters = [
-  {name:'蕾姆',series:'Re:从零开始',gender:'female',height:'mid-low',build:'slim',face:'round',cost:'low',complexity:'低',tags:['女仆装','短发','经典']},
-  {name:'血小板',series:'工作细胞',gender:'female',height:'short',build:'slim',face:'round',cost:'low',complexity:'低',tags:['制服','可爱','低门槛']},
-  {name:'甘露寺蜜璃',series:'鬼灭之刃',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['和服','长发','人气']},
-  {name:'时崎狂三',series:'约会大作战',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['哥特','双马尾','经典']},
-  {name:'02',series:'DARLING in the FRANXX',gender:'female',height:'mid',build:'slim',face:'oval',cost:'low',complexity:'低',tags:['紧身衣','粉发','人气']},
-  {name:'薇尔莉特',series:'紫罗兰永恒花园',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['洋装','金发','精致']},
-  {name:'蝴蝶忍',series:'鬼灭之刃',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['和服','蝴蝶发饰','优雅']},
-  {name:'亚丝娜',series:'刀剑神域',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['战斗服','长发','经典']},
-  {name:'Saber',series:'Fate系列',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['铠甲','金发','经典']},
-  {name:'艾米莉亚',series:'Re:从零开始',gender:'female',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['精灵','银发','优雅']},
-  {name:'五更琉璃',series:'俺妹',gender:'female',height:'mid-low',build:'slim',face:'round',cost:'low',complexity:'低',tags:['哥特','黑长直','经典']},
-  {name:'三笠·阿克曼',series:'进击的巨人',gender:'female',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',tags:['军装','短发','飒']},
-  {name:'八重神子',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['和风','粉发','精致']},
-  {name:'雷电将军',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['和风','紫发','华丽']},
-  {name:'纳西妲',series:'原神',gender:'female',height:'short',build:'slim',face:'round',cost:'mid',complexity:'中',tags:['精灵','可爱','小巧']},
-  {name:'康娜',series:'小林家的龙女仆',gender:'female',height:'short',build:'soft',face:'round',cost:'low',complexity:'低',tags:['可爱','日常','低门槛']},
-  {name:'托尔',series:'小林家的龙女仆',gender:'female',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['女仆','龙角','可爱']},
-  {name:'五条悟',series:'咒术回战',gender:'male',height:'mid-high',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['制服','白毛','人气']},
-  {name:'炭治郎',series:'鬼灭之刃',gender:'male',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',tags:['和服','日轮刀','经典']},
-  {name:'利威尔',series:'进击的巨人',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['军装','短发','人气']},
-  {name:'太宰治',series:'文豪野犬',gender:'male',height:'mid',build:'slim',face:'oval',cost:'low',complexity:'低',tags:['风衣','绷带','低门槛']},
-  {name:'宇智波佐助',series:'火影忍者',gender:'male',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['忍者','黑发','经典']},
-  {name:'漩涡鸣人',series:'火影忍者',gender:'male',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',tags:['忍者','金发','经典']},
-  {name:'杀生丸',series:'犬夜叉',gender:'male',height:'mid-high',build:'slim',face:'long',cost:'mid',complexity:'中',tags:['和服','银发','高冷']},
-  {name:'中原中也',series:'文豪野犬',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'low',complexity:'低',tags:['西装','帽子','低门槛']},
-  {name:'钟离',series:'原神',gender:'male',height:'mid-high',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['中式','西装','华丽']},
-  {name:'灶门祢豆子',series:'鬼灭之刃',gender:'female',height:'mid-low',build:'slim',face:'round',cost:'mid',complexity:'中',tags:['和服','竹筒','可爱']},
-  {name:'胡桃',series:'原神',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['中式','双马尾','活泼']},
-  {name:'刻晴',series:'原神',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['中式','紫发','干练']},
-  {name:'魈',series:'原神',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['中式','绿发','冷酷']},
-  {name:'散兵',series:'原神',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['和风','紫发','人气']},
-  {name:'木之本樱',series:'魔卡少女樱',gender:'female',height:'short',build:'slim',face:'round',cost:'mid',complexity:'中',tags:['魔法少女','可爱','经典']},
-  {name:'阿尼亚',series:'间谍过家家',gender:'female',height:'short',build:'slim',face:'round',cost:'low',complexity:'低',tags:['日常','粉发','超人气']},
-  {name:'约尔',series:'间谍过家家',gender:'female',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['日常','黑发','人气']},
-  {name:'黄昏',series:'间谍过家家',gender:'male',height:'mid-high',build:'athletic',face:'square',cost:'low',complexity:'低',tags:['西装','金发','低门槛']},
-  {name:'楪祈',series:'罪恶王冠',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['歌姬','粉发','经典']},
-  {name:'艾伦·耶格尔',series:'进击的巨人',gender:'male',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',tags:['军装','棕发','人气']},
-  {name:'金木研',series:'东京食尸鬼',gender:'male',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['面具','白发','经典']},
-  {name:'达达利亚',series:'原神',gender:'male',height:'mid-high',build:'athletic',face:'oval',cost:'high',complexity:'高',tags:['战斗服','橙发','华丽']},
-  {name:'甘雨',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['中式','蓝发','仙气']},
+  {name:'蕾姆',series:'Re:从零开始',gender:'female',height:'mid-low',build:'slim',face:'round',cost:'low',complexity:'低',img:'',tags:['女仆装','短发','经典']},
+  {name:'血小板',series:'工作细胞',gender:'female',height:'short',build:'slim',face:'round',cost:'low',complexity:'低',img:'127417',tags:['制服','可爱','低门槛']},
+  {name:'甘露寺蜜璃',series:'鬼灭之刃',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid-low',complexity:'中',img:'136072',tags:['和服','长发','人气']},
+  {name:'时崎狂三',series:'约会大作战',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid-low',complexity:'中',img:'',tags:['哥特','双马尾','经典']},
+  {name:'02',series:'DARLING in the FRANXX',gender:'female',height:'mid',build:'slim',face:'oval',cost:'low',complexity:'低',img:'',tags:['紧身衣','粉发','人气']},
+  {name:'薇尔莉特',series:'紫罗兰永恒花园',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'high',complexity:'高',img:'',tags:['洋装','金发','精致']},
+  {name:'蝴蝶忍',series:'鬼灭之刃',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',img:'150672',tags:['和服','蝴蝶发饰','优雅']},
+  {name:'亚丝娜',series:'刀剑神域',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',img:'3634',tags:['战斗服','长发','经典']},
+  {name:'Saber',series:'Fate系列',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'high',complexity:'高',img:'2746',tags:['铠甲','金发','经典']},
+  {name:'艾米莉亚',series:'Re:从零开始',gender:'female',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',img:'',tags:['精灵','银发','优雅']},
+  {name:'五更琉璃',series:'俺妹',gender:'female',height:'mid-low',build:'slim',face:'round',cost:'low',complexity:'低',img:'',tags:['哥特','黑长直','经典']},
+  {name:'三笠·阿克曼',series:'进击的巨人',gender:'female',height:'mid',build:'athletic',face:'oval',cost:'mid-low',complexity:'中',img:'40882',tags:['军装','短发','飒']},
+  {name:'八重神子',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',img:'227380',tags:['和风','粉发','精致']},
+  {name:'雷电将军',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',img:'211643',tags:['和风','紫发','华丽']},
+  {name:'纳西妲',series:'原神',gender:'female',height:'short',build:'slim',face:'round',cost:'mid',complexity:'中',img:'',tags:['精灵','可爱','小巧']},
+  {name:'康娜',series:'小林家的龙女仆',gender:'female',height:'short',build:'soft',face:'round',cost:'low',complexity:'低',img:'86589',tags:['可爱','日常','低门槛']},
+  {name:'托尔',series:'小林家的龙女仆',gender:'female',height:'mid',build:'slim',face:'oval',cost:'mid-low',complexity:'中',img:'',tags:['女仆','龙角','可爱']},
+  {name:'五条悟',series:'咒术回战',gender:'male',height:'mid-high',build:'slim',face:'oval',cost:'mid',complexity:'中',img:'127691',tags:['制服','白毛','人气']},
+  {name:'炭治郎',series:'鬼灭之刃',gender:'male',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',img:'126071',tags:['和服','日轮刀','经典']},
+  {name:'利威尔',series:'进击的巨人',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'mid-low',complexity:'中',img:'45627',tags:['军装','短发','人气']},
+  {name:'太宰治',series:'文豪野犬',gender:'male',height:'mid',build:'slim',face:'oval',cost:'low',complexity:'低',img:'89198',tags:['风衣','绷带','低门槛']},
+  {name:'宇智波佐助',series:'火影忍者',gender:'male',height:'mid',build:'slim',face:'oval',cost:'mid-low',complexity:'中',img:'13',tags:['忍者','黑发','经典']},
+  {name:'漩涡鸣人',series:'火影忍者',gender:'male',height:'mid',build:'athletic',face:'oval',cost:'mid-low',complexity:'中',img:'17',tags:['忍者','金发','经典']},
+  {name:'杀生丸',series:'犬夜叉',gender:'male',height:'mid-high',build:'slim',face:'long',cost:'mid',complexity:'中',img:'',tags:['和服','银发','高冷']},
+  {name:'中原中也',series:'文豪野犬',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'low',complexity:'低',img:'89853',tags:['西装','帽子','低门槛']},
+  {name:'钟离',series:'原神',gender:'male',height:'mid-high',build:'slim',face:'oval',cost:'high',complexity:'高',img:'208225',tags:['中式','西装','华丽']},
+  {name:'灶门祢豆子',series:'鬼灭之刃',gender:'female',height:'mid-low',build:'slim',face:'round',cost:'mid-low',complexity:'中',img:'',tags:['和服','竹筒','可爱']},
+  {name:'胡桃',series:'原神',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',img:'215788',tags:['中式','双马尾','活泼']},
+  {name:'刻晴',series:'原神',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',img:'215796',tags:['中式','紫发','干练']},
+  {name:'魈',series:'原神',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',img:'215780',tags:['中式','绿发','冷酷']},
+  {name:'散兵',series:'原神',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',img:'',tags:['和风','紫发','人气']},
+  {name:'木之本樱',series:'魔卡少女樱',gender:'female',height:'short',build:'slim',face:'round',cost:'mid-low',complexity:'中',img:'',tags:['魔法少女','可爱','经典']},
+  {name:'阿尼亚',series:'间谍过家家',gender:'female',height:'short',build:'slim',face:'round',cost:'low',complexity:'低',img:'',tags:['日常','粉发','超人气']},
+  {name:'约尔',series:'间谍过家家',gender:'female',height:'mid',build:'slim',face:'oval',cost:'mid-low',complexity:'中',img:'',tags:['日常','黑发','人气']},
+  {name:'黄昏',series:'间谍过家家',gender:'male',height:'mid-high',build:'athletic',face:'square',cost:'low',complexity:'低',img:'',tags:['西装','金发','低门槛']},
+  {name:'楪祈',series:'罪恶王冠',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid-low',complexity:'中',img:'',tags:['歌姬','粉发','经典']},
+  {name:'艾伦·耶格尔',series:'进击的巨人',gender:'male',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',img:'',tags:['军装','棕发','人气']},
+  {name:'金木研',series:'东京食尸鬼',gender:'male',height:'mid',build:'slim',face:'oval',cost:'mid-low',complexity:'中',img:'',tags:['面具','白发','经典']},
+  {name:'达达利亚',series:'原神',gender:'male',height:'mid-high',build:'athletic',face:'oval',cost:'high',complexity:'高',img:'',tags:['战斗服','橙发','华丽']},
+  {name:'甘雨',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',img:'',tags:['中式','蓝发','仙气']},
 ];
 
 // ═══════ MATCHING ═══════
@@ -449,6 +471,18 @@ const faceCompatibility = {
   square: {round:5,oval:10,square:30,heart:0,long:10},
   long: {round:0,oval:10,square:10,heart:8,long:30},
 };
+
+// ═══════ SERIES COLOR PALETTE ═══════
+const seriesColors = {
+  'Re:从零开始':'135,180,255','鬼灭之刃':'34,211,238','约会大作战':'236,72,153',
+  'DARLING in the FRANXX':'239,68,68','紫罗兰永恒花园':'168,162,255','刀剑神域':'250,204,21',
+  'Fate系列':'59,130,246','俺妹':'168,85,247','进击的巨人':'168,162,158',
+  '原神':'251,191,36','小林家的龙女仆':'74,222,128','咒术回战':'129,140,248',
+  '文豪野犬':'71,85,105','火影忍者':'249,115,22','犬夜叉':'239,68,68',
+  '魔卡少女樱':'244,114,182','间谍过家家':'34,197,94','罪恶王冠':'217,70,239',
+  '东京食尸鬼':'139,92,246','工作细胞':'239,68,68',
+};
+const defaultColor = '124,58,237';
 
 function diagnose() {
   if (!faceData) return;
@@ -505,11 +539,20 @@ function diagnose() {
   list.innerHTML = results.map((r,i) => {
     const c = r.char; const isLocked = i >= 3;
     const maxScore = 100; const matchPct = Math.min(99, Math.round(r.score / maxScore * 100));
+    const imgUrl = c.img ? `images/characters/${c.img}.jpg` : '';
+    const costLabel = {low:'500以内','mid-low':'500-1000',mid:'1000-2000',high:'2000+'};
+    const sc = seriesColors[c.series] || defaultColor;
     return `
       <div class="char-card${isLocked?' premium':''}">
         <div class="char-rank">#${i+1}</div>
+        <div class="char-img-wrap" style="background:radial-gradient(ellipse at 30% 20%,rgba(${sc},0.2),transparent 70%),linear-gradient(135deg,rgba(${sc},0.12),rgba(0,0,0,0.3))">
+          ${c.img ? `<img class="char-img" src="${imgUrl}" alt="${c.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+          <div class="char-img-fallback"${c.img?' style="display:none"':''}>
+            <span class="char-img-initial">${c.name}</span>
+            <span class="char-img-label">${c.series}</span>
+          </div>
+        </div>
         <div class="char-header">
-          <div class="char-avatar">${c.gender==='female'?'👩':'👨'}</div>
           <div class="char-info">
             <div class="char-name">${c.name}</div>
             <div class="char-series">${c.series}</div>
@@ -523,7 +566,7 @@ function diagnose() {
           ${c.tags.map(t => `<span class="char-tag ${t==='可爱'||t==='低门槛'?'pink':t==='经典'?'green':''}">${t}</span>`).join('')}
         </div>
         <div class="char-cost">
-          <span>💰 预估 <b>${c.cost==='low'?'500以内':c.cost==='mid'?'500-2000':'2000+'}</b></span>
+          <span>💰 预估 <b>${costLabel[c.cost]||'待定'}</b></span>
           ${!isLocked?`<span style="color:#ff9ec4;cursor:pointer;margin-left:auto;" onclick="showToast('🔒 详细出装清单为付费功能（开发中）')">📋 看出装清单 →</span>`:''}
         </div>
       </div>`;
