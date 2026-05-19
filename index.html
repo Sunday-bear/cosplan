@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cosplan - 婕睍鍑虹墖鍔╂墜</title>
+  <title>Cosplan - 漫展出片助手</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="/manifest.json">
@@ -42,7 +42,7 @@
       overflow-x: hidden;
     }
 
-    /* ===== COS 鍥剧墖娴佸姩鑳屾櫙 ===== */
+    /* ===== COS 图片流动背景 ===== */
     .cos-bg {
       position: fixed;
       top: 0;
@@ -85,7 +85,7 @@
       opacity: 0.2;
     }
 
-    /* 姣忓眰閲岄潰鐨勫崱鐗?*/
+    /* 每层里面的卡片 */
     .cos-img-card {
       width: 100px;
       height: 140px;
@@ -106,7 +106,7 @@
       100% { transform: translateX(0); }
     }
 
-    /* 搴曢儴鏆楄壊娓愬彉閬僵 */
+    /* 底部暗色渐变遮罩 */
     .cos-bg::after {
       content: '';
       position: absolute;
@@ -182,7 +182,7 @@
       font-size: 13px;
     }
 
-    /* ---- 杈撳叆鍗＄墖锛堟瘺鐜荤拑锛?---- */
+    /* ---- 输入卡片（毛玻璃） ---- */
     .input-card {
       background: rgba(255,255,255,0.12);
       backdrop-filter: blur(20px);
@@ -303,7 +303,7 @@
       transform: scale(0.95);
     }
 
-    /* ---- Step 鍗＄墖 ---- */
+    /* ---- Step 卡片 ---- */
     .steps {
       display: flex;
       flex-direction: column;
@@ -368,7 +368,7 @@
       font-weight: 600;
     }
 
-    /* ---- 鍔犺浇鐘舵€?---- */
+    /* ---- 加载状态 ---- */
     .loading-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -412,7 +412,7 @@
       min-height: 20px;
     }
 
-    /* ---- 缁撴灉鍖哄煙 ---- */
+    /* ---- 结果区域 ---- */
     .result-section {
       display: none;
     }
@@ -487,7 +487,7 @@
       color: rgba(255,255,255,0.85);
     }
 
-    /* ---- 婊ら暅 ---- */
+    /* ---- 滤镜 ---- */
     .filter-row {
       display: flex;
       gap: 10px;
@@ -549,7 +549,7 @@
       color: rgba(255,255,255,0.85);
     }
 
-    /* ---- 鏂囨 ---- */
+    /* ---- 文案 ---- */
     .caption-list {
       display: flex;
       flex-direction: column;
@@ -609,7 +609,7 @@
       color: #fff;
     }
 
-    /* ---- 搴曢儴 ---- */
+    /* ---- 底部 ---- */
     .bottom-bar {
       position: fixed;
       bottom: 0;
@@ -683,7 +683,7 @@
       opacity: 1;
     }
 
-    /* ---- 绌虹粨鏋?---- */
+    /* ---- 空结果 ---- */
     .empty-state {
       text-align: center;
       padding: 60px 20px;
@@ -714,7 +714,7 @@
       line-height: 1.5;
     }
 
-    /* ---- 浠锋牸 ---- */
+    /* ---- 价格 ---- */
     .price-tag {
       display: inline-flex;
       align-items: center;
@@ -748,7 +748,7 @@
 </head>
 <body>
 
-<!-- ===== COS 鍥剧墖娴佸姩鑳屾櫙 ===== -->
+<!-- ===== COS 图片流动背景 ===== -->
 <div class="cos-bg" id="cosBg">
   <div class="cos-layer layer-1" id="layer1"></div>
   <div class="cos-layer layer-2" id="layer2"></div>
@@ -761,85 +761,86 @@
   <!-- Header -->
   <header class="header">
     <div class="logo-row">
-      <span class="logo-icon">馃幀</span>
+      <span class="logo-icon">🎬</span>
       <span class="logo-text">Cosplan</span>
     </div>
-    <p class="tagline">婕睍鍑虹墖鍔╂墜 路 <span>杈撳叆瑙掕壊锛屼竴閿嚭鍏ㄥ鏂规</span></p>
+    <p class="tagline">漫展出片助手 · <span>输入角色，一键出全套方案</span></p>
   </header>
 
-  <!-- 杈撳叆鍗＄墖 -->
+  <!-- 输入卡片 -->
   <div class="input-card">
-    <div class="input-label">馃幁 浣犺鍑哄摢涓鑹诧紵</div>
-    <div class="input-hint">杈撳叆瑙掕壊鍚嶏紝Cosplan 甯綘鎼炲畾涓€鍒?/div>
+    <div class="input-label">🎭 你要出哪个角色？</div>
+    <div class="input-hint">输入角色名，Cosplan 帮你搞定一切</div>
     <div class="input-row">
       <input
         type="text"
         class="input-char"
         id="charInput"
-        placeholder="姣斿锛氳暰濮嗐€佺敇闇插铚滅拑銆佷簲鏉℃偀鈥?
+        placeholder="比如：蕾姆、甘露寺蜜璃、五条悟…"
         autocomplete="off"
       >
-      <button class="btn-go" id="btnGo" onclick="doGenerate()">鍑虹墖</button>
+      <button class="btn-go" id="btnGo" onclick="doGenerate()">出片</button>
     </div>
     <div class="quick-chars">
-      <button class="quick-char" onclick="quickPick('钑惧')">钑惧</button>
-      <button class="quick-char" onclick="quickPick('鐢橀湶瀵鸿湝鐠?)">鐢橀湶瀵鸿湝鐠?/button>
-      <button class="quick-char" onclick="quickPick('浜旀潯鎮?)">浜旀潯鎮?/button>
-      <button class="quick-char" onclick="quickPick('鏃跺磶鐙備笁')">鏃跺磶鐙備笁</button>
+      <button class="quick-char" onclick="quickPick('蕾姆')">蕾姆</button>
+      <button class="quick-char" onclick="quickPick('甘露寺蜜璃')">甘露寺蜜璃</button>
+      <button class="quick-char" onclick="quickPick('五条悟')">五条悟</button>
+      <button class="quick-char" onclick="quickPick('时崎狂三')">时崎狂三</button>
     </div>
   </div>
 
-  <!-- 绌虹姸鎬侊紙榛樿锛?-->
+  <!-- 空状态（默认） -->
   <div class="empty-state" id="emptyState">
-    <span class="empty-icon">馃幁</span>
-    <div class="empty-title">杈撳叆瑙掕壊鍚嶏紝涓€閿嚭鐗?/div>
+    <span class="empty-icon">🎭</span>
+    <div class="empty-title">输入角色名，一键出片</div>
     <div class="empty-desc">
-      Pose 鍙傝€冨浘 路 婊ら暅棰勮 路 鍙戝竷鏂囨<br>
-      鍏ㄩ儴甯綘鎼炲畾锛岀収鐫€鎶勫氨琛?鉁?    </div>
+      Pose 参考图 · 滤镜预设 · 发布文案<br>
+      全部帮你搞定，照着抄就行 ✨
+    </div>
   </div>
 
-  <!-- 鍔犺浇閬僵 -->
+  <!-- 加载遮罩 -->
   <div class="loading-overlay hidden" id="loadingOverlay">
     <div class="spinner"></div>
-    <div class="loading-text">姝ｅ湪鐢熸垚涓?..</div>
-    <div class="loading-step" id="loadingStep">馃帹 AI 姝ｅ湪鐢?pose 鍙傝€冨浘</div>
+    <div class="loading-text">正在生成中...</div>
+    <div class="loading-step" id="loadingStep">🎨 AI 正在画 pose 参考图</div>
   </div>
 
-  <!-- 缁撴灉鍖哄煙 -->
+  <!-- 结果区域 -->
   <div class="result-section" id="resultSection">
 
-    <!-- Pose 鍙傝€冨浘 -->
-    <div class="section-title">馃摳 Pose 鍙傝€冨浘 <span style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-left:auto;">鐓х潃鎽嗗氨琛?/span></div>
+    <!-- Pose 参考图 -->
+    <div class="section-title">📸 Pose 参考图 <span style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-left:auto;">照着摆就行</span></div>
     <div class="pose-grid" id="poseGrid"></div>
 
-    <!-- 蹇€熸护闀?-->
-    <div class="section-title">馃帹 蹇€熸护闀?<span style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-left:auto;">鍙戞湅鍙嬪湀澶熶簡</span></div>
+    <!-- 快速滤镜 -->
+    <div class="section-title">🎨 快速滤镜 <span style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-left:auto;">发朋友圈够了</span></div>
     <div class="filter-row">
       <div class="filter-card" onclick="applyFilter('warm')">
-        <div class="filter-preview warm">馃寘</div>
-        <div class="filter-name">鏆栬皟鍔ㄦ极</div>
+        <div class="filter-preview warm">🌅</div>
+        <div class="filter-name">暖调动漫</div>
       </div>
       <div class="filter-card" onclick="applyFilter('cool')">
-        <div class="filter-preview cool">鉂勶笍</div>
-        <div class="filter-name">鍐疯皟楂樼骇</div>
+        <div class="filter-preview cool">❄️</div>
+        <div class="filter-name">冷调高级</div>
       </div>
       <div class="filter-card" onclick="applyFilter('anime')">
-        <div class="filter-preview anime">馃尭</div>
-        <div class="filter-name">鏌斿厜鑳剁墖</div>
+        <div class="filter-preview anime">🌸</div>
+        <div class="filter-name">柔光胶片</div>
       </div>
     </div>
     <div style="font-size:12px;color:var(--text-secondary);margin-top:8px;text-align:center;">
-      鈿?涓€閿鐢紝姣斾粈涔堥兘涓嶄慨寮猴紝鑰屼笖澶熷揩
+      ⚡ 一键套用，比什么都不修强，而且够快
     </div>
 
-    <!-- 鍙戝竷鏂囨 -->
-    <div class="section-title">馃摫 鍙戝竷鏂囨 <span style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-left:auto;">涓€閿鍒?/span></div>
+    <!-- 发布文案 -->
+    <div class="section-title">📱 发布文案 <span style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-left:auto;">一键复制</span></div>
     <div class="caption-list" id="captionList"></div>
 
-    <!-- 瀹氫环 -->
+    <!-- 定价 -->
     <div class="pricing-banner">
-      <span>棣栨</span> <span class="big">鍏嶈垂</span><br>
-      <span style="font-size:13px;color:var(--text-secondary);">涔嬪悗 楼9.9 鏃犻檺鐢熸垚</span>
+      <span>首次</span> <span class="big">免费</span><br>
+      <span style="font-size:13px;color:var(--text-secondary);">之后 ¥9.9 无限生成</span>
     </div>
   </div>
 
@@ -849,8 +850,8 @@
 </div>
 
 <script>
-  // ========== COS 鑳屾櫙鍥撅紙鍗犱綅锛?==========
-  // 鐪熷疄浜у搧鏇挎崲涓?cos 姝ｇ墖 URL
+  // ========== COS 背景图（占位） ==========
+  // 真实产品替换为 cos 正片 URL
   const cosImages = [
     'https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=200&h=280&fit=crop',  // coser with sword
     'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&h=280&fit=crop',  // concert lights
@@ -868,13 +869,15 @@
 
   function buildLayer(layerId, count) {
     const layer = document.getElementById(layerId);
-    // 澶嶅埗涓や唤浠ヤ繚璇佹棤缂濆惊鐜?    for (let dup = 0; dup < 2; dup++) {
+    // 复制两份以保证无缝循环
+    for (let dup = 0; dup < 2; dup++) {
       for (let i = 0; i < count; i++) {
         const card = document.createElement('div');
         card.className = 'cos-img-card';
         const img = cosImages[(i + (dup * 7)) % cosImages.length];
         card.style.backgroundImage = `url(${img})`;
-        // 闅忔満寰皟閫忔槑搴?        card.style.opacity = 0.5 + Math.random() * 0.5;
+        // 随机微调透明度
+        card.style.opacity = 0.5 + Math.random() * 0.5;
         layer.appendChild(card);
       }
     }
@@ -886,34 +889,34 @@
   buildLayer('layer4', 10);
 
   const poseData = {
-    pose1: { emoji: '馃', label: '缁忓吀绔欏Э', tip: '鍙屾墜鑷劧鍨傛斁锛屼綋鎬佹斁鏉? },
-    pose2: { emoji: '馃獞', label: '渚у潗', tip: '渚ц韩鍧愪笅锛屽弻鑵垮苟鎷㈠井渚? },
-    pose3: { emoji: '馃檹', label: '鍙屾墜鍚堝崄', tip: '闂溂浣庡ご锛岄€傚悎娓╂煍瑙掕壊' },
-    pose4: { emoji: '馃憖', label: '鍥炵湼', tip: '渚ц韩鍥炲ご锛岀溂绁炵湅闀滃ご' },
-    pose5: { emoji: '馃棥锔?, label: '姝﹀櫒鎸佹彙', tip: '鍙屾墜鎸佹鍣紝閲嶅績鍘嬩綆' },
-    pose6: { emoji: '馃', label: '璺Э', tip: '鍗曡啙鎴栧弻鑶濊藩鍦帮紝韬綋寰€? },
-    pose7: { emoji: '馃弮', label: '鍔ㄦ€佸璺?, tip: '澶村彂鍜岃鎽嗚嚜鐒堕鍔? },
-    pose8: { emoji: '馃獮', label: '鐪嬮暅瀛?, tip: '鎵嬫寔灏忛亾鍏凤紝鐪肩鐪嬪悜涓€渚? },
-    pose9: { emoji: '馃挭', label: '鎴樻枟濮挎€?, tip: '韬綋渚у闀滃ご锛屽噯澶囨垬鏂? },
-    pose10: { emoji: '馃槉', label: '姝ｉ潰寰瑧', tip: '姝ｅ闀滃ご锛岃〃鎯呰嚜鐒跺井绗? },
+    pose1: { emoji: '🧍', label: '经典站姿', tip: '双手自然垂放，体态放松' },
+    pose2: { emoji: '🪑', label: '侧坐', tip: '侧身坐下，双腿并拢微侧' },
+    pose3: { emoji: '🙏', label: '双手合十', tip: '闭眼低头，适合温柔角色' },
+    pose4: { emoji: '👀', label: '回眸', tip: '侧身回头，眼神看镜头' },
+    pose5: { emoji: '🗡️', label: '武器持握', tip: '双手持武器，重心压低' },
+    pose6: { emoji: '🧎', label: '跪姿', tip: '单膝或双膝跪地，身体微倾' },
+    pose7: { emoji: '🏃', label: '动态奔跑', tip: '头发和裙摆自然飘动' },
+    pose8: { emoji: '🪞', label: '看镜子', tip: '手持小道具，眼神看向一侧' },
+    pose9: { emoji: '💪', label: '战斗姿态', tip: '身体侧对镜头，准备战斗' },
+    pose10: { emoji: '😊', label: '正面微笑', tip: '正对镜头，表情自然微笑' },
   };
 
   const captions = [
     {
-      platform: 'QQ绌洪棿',
-      text: '浠婂ぉ鍑轰簡銆恵瑙掕壊}銆戯紒\n鎰熻阿鎽勫奖澶уぇ @XX 鐨勮繑鍥?馃檹\n\n杩欏鎷嶅緱瓒呮弧鎰忥紝澶у瑙夊緱鎬庝箞鏍凤紵\n#cos #{瑙掕壊}cos #婕睍 #姝ｇ墖',
+      platform: 'QQ空间',
+      text: '今天出了【{角色}】！\n感谢摄影大大 @XX 的返图 🙏\n\n这套拍得超满意，大家觉得怎么样？\n#cos #{角色}cos #漫展 #正片',
     },
     {
-      platform: '鎶栭煶 / 灏忕孩涔?,
-      text: 'cos銆恵瑙掕壊}銆戠殑涓€澶?鉁╘n\n浠庡噯澶囧埌鎴愮墖锛屽叏鏄?Cosplan 甯垜鎼炲畾鐨勶紒\nPose 鐓х潃鍥炬憜灏辫锛屼慨鍥句竴閿嚭鐗囷紝鏂囨涔熶笉鐢ㄦ兂浜哱n\n鎳掍汉鍑虹墖澶╄姳鏉?馃幀\n#cos #{瑙掕壊} #鍑虹墖鍔╂墜 #婕睍',
+      platform: '抖音 / 小红书',
+      text: 'cos【{角色}】的一天 ✨\n\n从准备到成片，全是 Cosplan 帮我搞定的！\nPose 照着图摆就行，修图一键出片，文案也不用想了\n\n懒人出片天花板 🎬\n#cos #{角色} #出片助手 #漫展',
     },
     {
-      platform: '寰崥',
-      text: '銆恵瑙掕壊}銆戞鐗囨帀钀?馃摳\n\n濡嗛€狅細@XX濡嗗\n鎽勫奖锛欯XX\n鍚庢湡锛欳osplan 蹇€熸护闀淺n\n蹇慨鍑哄浘鐪熺殑鏂逛究锛岀簿淇繕鍦ㄧ瓑锛堝凡缁忕瓑浜嗗崐涓湀浜?orz\n#cos #{瑙掕壊}cos #姝ｇ墖 #cos姝ｇ墖',
+      platform: '微博',
+      text: '【{角色}】正片掉落 📸\n\n妆造：@XX妆娘\n摄影：@XX\n后期：Cosplan 快速滤镜\n\n快修出图真的方便，精修还在等（已经等了半个月了 orz\n#cos #{角色}cos #正片 #cos正片',
     },
   ];
 
-  // ========== 浜や簰閫昏緫 ==========
+  // ========== 交互逻辑 ==========
   const charInput = document.getElementById('charInput');
   const btnGo = document.getElementById('btnGo');
   const emptyState = document.getElementById('emptyState');
@@ -926,22 +929,22 @@
 
   let currentChar = '';
 
-  // 蹇嵎閫夋嫨
+  // 快捷选择
   function quickPick(name) {
     charInput.value = name;
     doGenerate();
   }
 
-  // 鍥炶溅瑙﹀彂
+  // 回车触发
   charInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') doGenerate();
   });
 
-  // 鐢熸垚娴佺▼
+  // 生成流程
   async function doGenerate() {
     const name = charInput.value.trim();
     if (!name) {
-      showToast('璇疯緭鍏ヨ鑹插悕');
+      showToast('请输入角色名');
       charInput.focus();
       return;
     }
@@ -953,13 +956,13 @@
     resultSection.classList.remove('active');
     loadingOverlay.classList.remove('hidden');
 
-    // 妯℃嫙鐢熸垚姝ラ
+    // 模拟生成步骤
     const steps = [
-      { text: '馃帹 AI 姝ｅ湪鐢?pose 鍙傝€冨浘...', delay: 800 },
-      { text: '馃柤锔?姝ｅ湪鐢熸垚瑙掕壊 cos 鏁堟灉...', delay: 700 },
-      { text: '馃幀 鍑嗗婊ら暅棰勮...', delay: 500 },
-      { text: '馃摑 鎾板啓鍚勫钩鍙板彂甯冩枃妗?..', delay: 600 },
-      { text: '鉁?鏁寸悊杈撳嚭...', delay: 400 },
+      { text: '🎨 AI 正在画 pose 参考图...', delay: 800 },
+      { text: '🖼️ 正在生成角色 cos 效果...', delay: 700 },
+      { text: '🎬 准备滤镜预设...', delay: 500 },
+      { text: '📝 撰写各平台发布文案...', delay: 600 },
+      { text: '✨ 整理输出...', delay: 400 },
     ];
 
     for (const step of steps) {
@@ -967,21 +970,22 @@
       await sleep(step.delay);
     }
 
-    // 娓叉煋缁撴灉
+    // 渲染结果
     renderPoses(name);
     renderCaptions(name);
 
     loadingOverlay.classList.add('hidden');
     resultSection.classList.add('active');
     btnGo.disabled = false;
-    btnGo.textContent = '鍑虹墖';
+    btnGo.textContent = '出片';
 
-    // 婊氬姩鍒扮粨鏋?    resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // 滚动到结果
+    resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    showToast('鉁?鐢熸垚瀹屾垚锛?);
+    showToast('✅ 生成完成！');
   }
 
-  // 娓叉煋 Pose 鍗＄墖
+  // 渲染 Pose 卡片
   function renderPoses(name) {
     poseGrid.innerHTML = '';
     const colors = ['#fce7f3', '#ede9fe', '#dbeafe', '#fef3c7', '#fce7f3'];
@@ -989,7 +993,7 @@
     for (const [key, data] of Object.entries(poseData)) {
       const card = document.createElement('div');
       card.className = 'pose-card';
-      card.onclick = () => showToast(`馃挕 ${data.tip}`);
+      card.onclick = () => showToast(`💡 ${data.tip}`);
       card.innerHTML = `
         <div class="pose-img" style="background:linear-gradient(135deg, ${colors[i%5]}, ${colors[(i+1)%5]});">
           <span>${data.emoji}</span>
@@ -1001,43 +1005,43 @@
     }
   }
 
-  // 娓叉煋鏂囨
+  // 渲染文案
   function renderCaptions(name) {
     captionList.innerHTML = '';
     captions.forEach((cap, idx) => {
-      const text = cap.text.replace(/\{瑙掕壊\}/g, name);
+      const text = cap.text.replace(/\{角色\}/g, name);
       const card = document.createElement('div');
       card.className = 'caption-card';
       card.innerHTML = `
         <div class="caption-platform">${cap.platform}</div>
         <div class="caption-text">${text.replace(/\n/g, '<br>')}</div>
-        <button class="caption-copy" id="copyBtn${idx}" onclick="copyCaption(${idx}, '${escapeHtml(text)}')">馃搵 涓€閿鍒?/button>
+        <button class="caption-copy" id="copyBtn${idx}" onclick="copyCaption(${idx}, '${escapeHtml(text)}')">📋 一键复制</button>
       `;
       captionList.appendChild(card);
     });
   }
 
-  // 澶嶅埗鏂囨
+  // 复制文案
   function copyCaption(idx, text) {
     const decoded = text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/<br>/g, '\n');
     navigator.clipboard.writeText(decoded).then(() => {
       const btn = document.getElementById('copyBtn' + idx);
-      btn.textContent = '鉁?宸插鍒?;
+      btn.textContent = '✅ 已复制';
       btn.classList.add('copied');
       setTimeout(() => {
-        btn.textContent = '馃搵 涓€閿鍒?;
+        btn.textContent = '📋 一键复制';
         btn.classList.remove('copied');
       }, 2000);
-      showToast('馃搵 鏂囨宸插鍒讹紒');
+      showToast('📋 文案已复制！');
     }).catch(() => {
-      showToast('澶嶅埗澶辫触锛岃鎵嬪姩闀挎寜澶嶅埗');
+      showToast('复制失败，请手动长按复制');
     });
   }
 
-  // 婊ら暅 - 妯℃嫙
+  // 滤镜 - 模拟
   function applyFilter(type) {
-    const names = { warm: '鏆栬皟鍔ㄦ极', cool: '鍐疯皟楂樼骇', anime: '鏌斿厜鑳剁墖' };
-    showToast('馃帹 宸插鐢ㄣ€? + names[type] + '銆嶆护闀?);
+    const names = { warm: '暖调动漫', cool: '冷调高级', anime: '柔光胶片' };
+    showToast('🎨 已套用「' + names[type] + '」滤镜');
   }
 
   // Toast
@@ -1050,7 +1054,7 @@
     }, 2000);
   }
 
-  // 宸ュ叿鍑芥暟
+  // 工具函数
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
   function escapeHtml(str) {
