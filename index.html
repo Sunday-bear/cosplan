@@ -811,7 +811,7 @@ async function loadDynamicCosplay(idx) {
   if (!loaded) {
     try {
       const keyword = char.series ? `${char.series} ${char.name}` : char.name;
-      const apiUrl = `https://api.cosplan.top/search?q=${encodeURIComponent(keyword)}`;
+      const apiUrl = `https://cosplan-api.15913625621.workers.dev/search?q=${encodeURIComponent(keyword)}`;
       
       const resp = await fetch(apiUrl, { signal: AbortSignal.timeout(10000) });
       if (resp.ok) {
