@@ -547,6 +547,20 @@ const seriesColors = {
 };
 const defaultColor = '124,58,237';
 
+// Character key mapping for cosplay image paths
+const charKeyMap = {
+  '蕾姆':'rem','血小板':'platelet','甘露寺蜜璃':'kanroji_mitsuri','时崎狂三':'kurumi',
+  '02':'zero_two','薇尔莉特':'violet','蝴蝶忍':'shinobu','亚丝娜':'asuna',
+  'Saber':'saber','艾米莉亚':'emilia','五更琉璃':'kuroneko','三笠·阿克曼':'mikasa',
+  '八重神子':'yae_miko','雷电将军':'raiden','纳西妲':'nahida','康娜':'kanna','托尔':'tohru',
+  '五条悟':'gojo','炭治郎':'tanjiro','利威尔':'levi','太宰治':'dazai',
+  '宇智波佐助':'sasuke','漩涡鸣人':'naruto','杀生丸':'sesshomaru','中原中也':'chuuya',
+  '钟离':'zhongli','灶门祢豆子':'nezuko','胡桃':'hutao','刻晴':'keqing',
+  '魈':'xiao','散兵':'scaramouche','木之本樱':'sakura',
+  '阿尼亚':'anya','约尔':'yor','黄昏':'loid','楪祈':'inori',
+  '艾伦·耶格尔':'eren','金木研':'kaneki','达达利亚':'tartaglia','甘雨':'ganyu',
+};
+
 function diagnose() {
   if (!faceData) return;
   const d = faceData;
@@ -689,18 +703,25 @@ function diagnose() {
   const costLabel = {low:'500以内','mid-low':'500-1000',mid:'1000-2000',high:'2000+'};
   
   list.innerHTML = resultsWithNarratives.map((r,i) => {
-    const c = r.char; const imgUrl = c.img ? `images/characters/${c.img}.jpg` : '';
+    const c = r.char; 
+    // Use cosplay image if available, fallback to AniList CDN
+    const safeKey = charKeyMap[c.name] || c.name.replace(/[·\s]/g, '').toLowerCase();
+    const cosImg = `chars/${safeKey}/cos_01.jpg`;
+    const aniImg = c.img ? `images/characters/${c.img}.jpg` : '';
     const sc = seriesColors[c.series] || defaultColor;
     const charId = `char-img-${i}`;
-    // Store character data for dynamic loading
+    
+    // Store for dynamic loading
     if (!window._charData) window._charData = {};
     window._charData[i] = c;
+    window._charData[i].safeKey = safeKey;
+    
     return `
       <div class="char-card${r.isLocked?' premium':''}">
         <div class="char-rank">#${i+1}</div>
         <div class="char-img-wrap" style="background:radial-gradient(ellipse at 30% 20%,rgba(${sc},0.2),transparent 70%),linear-gradient(135deg,rgba(${sc},0.12),rgba(0,0,0,0.3))">
-          ${c.img ? `<img class="char-img" id="${charId}" src="${imgUrl}" alt="${c.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-          <div class="char-img-fallback"${c.img?' style="display:none"':''} id="${charId}-fb">
+          <img class="char-img" id="${charId}" src="${cosImg}" alt="${c.name}" loading="lazy" onerror="this.onerror=null;this.src='${aniImg}';if(!this.src||this.src===window.location.href){this.style.display='none';document.getElementById('${charId}-fb').style.display='flex'}">
+          <div class="char-img-fallback" style="display:none" id="${charId}-fb">
             <span class="char-img-initial">${c.name}</span>
             <span class="char-img-label">${c.series}</span>
           </div>
