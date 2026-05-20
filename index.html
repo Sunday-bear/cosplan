@@ -643,9 +643,9 @@ function diagnose() {
     // Generate exciting matching story
     const parts = [];
     
-    // Face match narrative
-    const faceScore = faceCompatibility[faceData.faceShape]?.[c.face] || 0;
-    if (faceScore >= 25) {
+    // Face match narrative (using continuous score)
+    const fwFhDiff2 = Math.abs(d.fwFh - (charTraits[c.name]?.fwFh || 0.80));
+    if (fwFhDiff2 < 0.03) {
       parts.push(`你的${shapeNames[faceData.faceShape]}${shapeDescs[faceData.faceShape]}，${c.face===faceData.faceShape?'与'+c.name+'的脸型如出一辙':'与'+c.name+'的脸型相互辉映'}，轮廓上天然契合`);
     } else if (faceScore >= 10) {
       parts.push(`你的${shapeNames[faceData.faceShape]}配上${c.name}的脸型，气质互补相辅相成`);
@@ -691,12 +691,13 @@ function diagnose() {
   list.innerHTML = resultsWithNarratives.map((r,i) => {
     const c = r.char; const imgUrl = c.img ? `images/characters/${c.img}.jpg` : '';
     const sc = seriesColors[c.series] || defaultColor;
+    const charId = `char-img-${i}-${Date.now()}`;
     return `
       <div class="char-card${r.isLocked?' premium':''}">
         <div class="char-rank">#${i+1}</div>
         <div class="char-img-wrap" style="background:radial-gradient(ellipse at 30% 20%,rgba(${sc},0.2),transparent 70%),linear-gradient(135deg,rgba(${sc},0.12),rgba(0,0,0,0.3))">
-          ${c.img ? `<img class="char-img" src="${imgUrl}" alt="${c.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-          <div class="char-img-fallback"${c.img?' style="display:none"':''}>
+          ${c.img ? `<img class="char-img" id="${charId}" src="${imgUrl}" alt="${c.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+          <div class="char-img-fallback"${c.img?' style="display:none"':''} id="${charId}-fb">
             <span class="char-img-initial">${c.name}</span>
             <span class="char-img-label">${c.series}</span>
           </div>
@@ -728,12 +729,79 @@ function diagnose() {
       <div class="lock-banner">
         <div class="lock-icon">🔒</div>
         <div class="lock-title">解锁全部 ${results.length} 个角色</div>
-        <div class="lock-desc">完整匹配列表 + 出装清单 + 角色速通卡<br>含购买渠道、省钱平替、OOC避雷指南</div>
+        <div class="lock-desc">完整匹配列表 + 动态cos种草图 + 角色速通卡<br>含购买渠道、省钱平替、OOC避雷指南</div>
         <button class="btn-unlock" onclick="showToast('💰 9.9元解锁全部（支付功能开发中）')">✨ 9.9 解锁全部</button>
       </div>`;
   }
 
+  // === DYNAMIC COSPLAY IMAGE LOADING ===
+  // Fetch real cosplay images for top 3 (free) results
+  resultsWithNarratives.slice(0, 3).forEach((r, i) => {
+    loadDynamicCosplay(r.char, i);
+  });
+
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Dynamic cosplay image search via Bilibili API
+async function loadDynamicCosplay(char, idx) {
+  const imgEl = document.getElementById(`char-img-${idx}`);
+  if (!imgEl) return;
+  
+  const keyword = `${char.series} ${char.name} cosplay`;
+  try {
+    // Try Bilibili photo API through CORS proxy
+    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+    const apiUrl = `https://api.bilibili.com/x/web-interface/search/type?search_type=photo&keyword=${encodeURIComponent(keyword)}&page=1`;
+    
+    const resp = await fetch(proxyUrl + encodeURIComponent(apiUrl), { signal: AbortSignal.timeout(5000) });
+    if (resp.ok) {
+      const data = await resp.json();
+      const results = data?.data?.result || [];
+      if (results.length > 0) {
+        const newImg = results[0]?.cover || results[0]?.pic;
+        if (newImg) {
+          const url = newImg.replace('http://', 'https://');
+          imgEl.src = url;
+          imgEl.style.display = 'block';
+          // Hide fallback
+          const fb = document.getElementById(`char-img-${idx}-fb`);
+          if (fb) fb.style.display = 'none';
+          return;
+        }
+      }
+    }
+  } catch(e) {
+    // CORS proxy failed, try local char images if available
+  }
+  
+  // Fallback: try loading local cosplay images if they exist
+  tryLoadLocalCosplay(char, idx);
+}
+
+function tryLoadLocalCosplay(char, idx) {
+  const safeKey = char.name.replace(/[·\s]/g, '').toLowerCase();
+  const imgEl = document.getElementById(`char-img-${idx}`);
+  if (!imgEl) return;
+  
+  // Try common key mappings
+  const keyMap = {
+    '蕾姆':'rem','血小板':'platelet','甘露寺蜜璃':'kanroji_mitsuri','时崎狂三':'kurumi',
+    '02':'zero_two','薇尔莉特':'violet','蝴蝶忍':'shinobu','亚丝娜':'asuna',
+    'Saber':'saber','艾米莉亚':'emilia','五更琉璃':'kuroneko','三笠·阿克曼':'mikasa',
+    '八重神子':'yae_miko','雷电将军':'raiden','康娜':'kanna','托尔':'tohru',
+    '五条悟':'gojo','炭治郎':'tanjiro','利威尔':'levi','太宰治':'dazai',
+    '杀生丸':'sesshomaru','中原中也':'chuuya','钟离':'zhongli','灶门祢豆子':'nezuko',
+    '胡桃':'hutao','刻晴':'keqing','魈':'xiao','木之本樱':'sakura',
+    '阿尼亚':'anya','约尔':'yor','黄昏':'loid','楪祈':'inori',
+    '艾伦·耶格尔':'eren','金木研':'kaneki','达达利亚':'tartaglia','甘雨':'ganyu',
+  };
+  const key = keyMap[char.name] || safeKey;
+  const cosUrl = `chars/${key}/cos_01.jpg`;
+  
+  const testImg = new Image();
+  testImg.onload = () => { imgEl.src = cosUrl; };
+  testImg.src = cosUrl;
 }
 
 function goHome() {
