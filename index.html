@@ -807,34 +807,25 @@ async function loadDynamicCosplay(idx) {
     } catch(e) {}
   }
   
-  // Fallback: search weibo API via CORS proxy (real cosplay photos)
+  // Fallback: call our own API (api.cosplan.top → Cloudflare Worker → weibo search)
   if (!loaded) {
     try {
-      const keyword = char.series ? `${char.series} ${char.name} cos` : `${char.name} cosplay`;
-      const wbUrl = `https://m.weibo.cn/api/container/getIndex?containerid=100103type%3D1%26q%3D${encodeURIComponent(keyword)}&page=1`;
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(wbUrl)}`;
+      const keyword = char.series ? `${char.series} ${char.name}` : char.name;
+      const apiUrl = `https://api.cosplan.top/search?q=${encodeURIComponent(keyword)}`;
       
-      const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+      const resp = await fetch(apiUrl, { signal: AbortSignal.timeout(10000) });
       if (resp.ok) {
         const data = await resp.json();
-        const cards = data?.data?.cards || [];
-        for (const card of cards) {
-          const pics = card?.mblog?.pics || card?.mblog?.retweeted_status?.pics || [];
-          for (const pic of pics) {
-            const imgUrl = pic.large?.url || pic.url;
-            if (imgUrl) {
-              imgEl.src = 'https:' + imgUrl;
-              imgEl.style.display = 'block';
-              const fb = document.getElementById(`char-img-${idx}-fb`);
-              if (fb) fb.style.display = 'none';
-              loaded = true;
-              break;
-            }
-          }
-          if (loaded) break;
+        const images = data?.images || [];
+        if (images.length > 0) {
+          imgEl.src = images[0];
+          imgEl.style.display = 'block';
+          const fb = document.getElementById(`char-img-${idx}-fb`);
+          if (fb) fb.style.display = 'none';
+          loaded = true;
         }
       }
-    } catch(e) { console.log('weibo search failed:', e.message); }
+    } catch(e) { console.log('API search failed:', e.message); }
   }
 }
 
