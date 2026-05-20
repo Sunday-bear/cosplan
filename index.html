@@ -691,7 +691,10 @@ function diagnose() {
   list.innerHTML = resultsWithNarratives.map((r,i) => {
     const c = r.char; const imgUrl = c.img ? `images/characters/${c.img}.jpg` : '';
     const sc = seriesColors[c.series] || defaultColor;
-    const charId = `char-img-${i}-${Date.now()}`;
+    const charId = `char-img-${i}`;
+    // Store character data for dynamic loading
+    if (!window._charData) window._charData = {};
+    window._charData[i] = c;
     return `
       <div class="char-card${r.isLocked?' premium':''}">
         <div class="char-rank">#${i+1}</div>
@@ -736,55 +739,21 @@ function diagnose() {
 
   // === DYNAMIC COSPLAY IMAGE LOADING ===
   // Fetch real cosplay images for top 3 (free) results
-  resultsWithNarratives.slice(0, 3).forEach((r, i) => {
-    loadDynamicCosplay(r.char, i);
-  });
+  setTimeout(() => {
+    for (let i = 0; i < Math.min(3, resultsWithNarratives.length); i++) {
+      loadDynamicCosplay(i);
+    }
+  }, 300);
 
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// Dynamic cosplay image search via Bilibili API
-async function loadDynamicCosplay(char, idx) {
+async function loadDynamicCosplay(idx) {
+  const char = window._charData?.[idx];
   const imgEl = document.getElementById(`char-img-${idx}`);
-  if (!imgEl) return;
+  if (!imgEl || !char) return;
   
-  const keyword = `${char.series} ${char.name} cosplay`;
-  try {
-    // Try Bilibili photo API through CORS proxy
-    const proxyUrl = 'https://api.allorigins.win/raw?url=';
-    const apiUrl = `https://api.bilibili.com/x/web-interface/search/type?search_type=photo&keyword=${encodeURIComponent(keyword)}&page=1`;
-    
-    const resp = await fetch(proxyUrl + encodeURIComponent(apiUrl), { signal: AbortSignal.timeout(5000) });
-    if (resp.ok) {
-      const data = await resp.json();
-      const results = data?.data?.result || [];
-      if (results.length > 0) {
-        const newImg = results[0]?.cover || results[0]?.pic;
-        if (newImg) {
-          const url = newImg.replace('http://', 'https://');
-          imgEl.src = url;
-          imgEl.style.display = 'block';
-          // Hide fallback
-          const fb = document.getElementById(`char-img-${idx}-fb`);
-          if (fb) fb.style.display = 'none';
-          return;
-        }
-      }
-    }
-  } catch(e) {
-    // CORS proxy failed, try local char images if available
-  }
-  
-  // Fallback: try loading local cosplay images if they exist
-  tryLoadLocalCosplay(char, idx);
-}
-
-function tryLoadLocalCosplay(char, idx) {
-  const safeKey = char.name.replace(/[·\s]/g, '').toLowerCase();
-  const imgEl = document.getElementById(`char-img-${idx}`);
-  if (!imgEl) return;
-  
-  // Try common key mappings
+  // First try local cached cosplay images
   const keyMap = {
     '蕾姆':'rem','血小板':'platelet','甘露寺蜜璃':'kanroji_mitsuri','时崎狂三':'kurumi',
     '02':'zero_two','薇尔莉特':'violet','蝴蝶忍':'shinobu','亚丝娜':'asuna',
@@ -796,12 +765,49 @@ function tryLoadLocalCosplay(char, idx) {
     '阿尼亚':'anya','约尔':'yor','黄昏':'loid','楪祈':'inori',
     '艾伦·耶格尔':'eren','金木研':'kaneki','达达利亚':'tartaglia','甘雨':'ganyu',
   };
-  const key = keyMap[char.name] || safeKey;
-  const cosUrl = `chars/${key}/cos_01.jpg`;
+  const key = keyMap[char.name] || char.name.replace(/[·\s]/g, '').toLowerCase();
   
-  const testImg = new Image();
-  testImg.onload = () => { imgEl.src = cosUrl; };
-  testImg.src = cosUrl;
+  // Try loading up to 3 local cosplay images
+  let loaded = false;
+  for (let ci = 1; ci <= 3; ci++) {
+    const cosUrl = `chars/${key}/cos_0${ci}.jpg`;
+    try {
+      const resp = await fetch(cosUrl, { signal: AbortSignal.timeout(3000) });
+      if (resp.ok) {
+        const blob = await resp.blob();
+        if (blob.size > 1000) { // actual image, not empty
+          imgEl.src = URL.createObjectURL(blob);
+          imgEl.style.display = 'block';
+          const fb = document.getElementById(`char-img-${idx}-fb`);
+          if (fb) fb.style.display = 'none';
+          loaded = true;
+          break;
+        }
+      }
+    } catch(e) {}
+  }
+  
+  // Fallback: try Bilibili API
+  if (!loaded) {
+    try {
+      const keyword = `${char.series} ${char.name} cosplay`;
+      const apiUrl = `https://api.bilibili.com/x/web-interface/search/type?search_type=photo&keyword=${encodeURIComponent(keyword)}&page=1`;
+      const resp = await fetch(apiUrl, { signal: AbortSignal.timeout(5000) });
+      if (resp.ok) {
+        const data = await resp.json();
+        const results = data?.data?.result || [];
+        if (results.length > 0) {
+          const newImg = results[0]?.cover || results[0]?.pic;
+          if (newImg) {
+            imgEl.src = newImg.replace('http://', 'https://');
+            imgEl.style.display = 'block';
+            const fb = document.getElementById(`char-img-${idx}-fb`);
+            if (fb) fb.style.display = 'none';
+          }
+        }
+      }
+    } catch(e) {}
+  }
 }
 
 function goHome() {
