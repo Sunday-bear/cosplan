@@ -127,8 +127,12 @@
     .char-name{font-size:18px;font-weight:700}
     .char-series{font-size:12px;color:var(--sub)}
     .char-match{font-size:15px;font-weight:800;color:#ff9ec4;background:rgba(255,107,157,0.12);padding:4px 12px;border-radius:10px}
-    .char-why{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px;background:rgba(255,255,255,0.03);padding:10px 12px;border-radius:var(--radius-sm)}
-    .char-why strong{color:rgba(255,255,255,0.7)}
+    .char-why{font-size:13px;color:rgba(255,255,255,0.75);line-height:1.8;margin-bottom:12px;background:rgba(255,255,255,0.03);padding:14px 16px;border-radius:var(--radius-sm);display:flex;gap:10px}
+    .char-why-icon{font-size:20px;flex-shrink:0;line-height:1.4}
+    .char-why-text{flex:1}
+    .char-highlight{font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;margin-left:6px;vertical-align:middle;background:linear-gradient(135deg,rgba(255,107,157,0.2),rgba(124,58,237,0.15));color:#ff9ec4}
+    .char-name .char-highlight{display:inline-block}
+    .char-vision{font-size:12px;color:rgba(255,255,255,0.55);line-height:1.7;margin-bottom:10px;padding:10px 14px;background:rgba(255,107,157,0.04);border-radius:10px;border-left:2px solid rgba(255,107,157,0.2)}
     .char-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
     .char-tag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:10px;background:rgba(124,58,237,0.1);color:#a78bfa}
     .char-tag.pink{background:rgba(255,107,157,0.1);color:#ff9ec4}
@@ -540,15 +544,72 @@ function diagnose() {
   document.getElementById('matchCount').textContent = results.length;
 
   const shapeNames = {round:'圆脸',oval:'鹅蛋脸',square:'方脸',heart:'瓜子脸',long:'长脸'};
+  const shapeDescs = {
+    round:'柔和圆润的轮廓',oval:'温婉和谐的黄金比例',square:'英气利落的线条',
+    heart:'精致小巧的下颌',long:'修长优雅的面庞'
+  };
+  const buildNames = {slim:'偏瘦',average:'标准',athletic:'有肌肉',soft:'偏圆润'};
+  const hLabels = {short:'155cm以下','mid-low':'155-165cm','mid':'165-175cm','mid-high':'175-185cm',tall:'185cm以上'};
+  
+  // Build vivid matching narratives
+  const resultsWithNarratives = results.map((r,i) => {
+    const c = r.char;
+    const maxScore = 100;
+    const matchPct = Math.min(99, Math.round(r.score / maxScore * 100));
+    
+    // Generate exciting matching story
+    const parts = [];
+    
+    // Face match narrative
+    const faceScore = faceCompatibility[faceData.faceShape]?.[c.face] || 0;
+    if (faceScore >= 25) {
+      parts.push(`你的${shapeNames[faceData.faceShape]}${shapeDescs[faceData.faceShape]}，${c.face===faceData.faceShape?'与'+c.name+'的脸型如出一辙':'与'+c.name+'的脸型相互辉映'}，轮廓上天然契合`);
+    } else if (faceScore >= 10) {
+      parts.push(`你的${shapeNames[faceData.faceShape]}配上${c.name}的脸型，气质互补相辅相成`);
+    }
+    
+    // Height narrative
+    const hOrder = ['short','mid-low','mid','mid-high','tall'];
+    const hDiff = Math.abs(hOrder.indexOf(c.height) - hOrder.indexOf(selected.height));
+    if (hDiff === 0) {
+      parts.push(`身高${hLabels[selected.height]}完全是${c.name}的天选之数，站在镜子前的那一刻你会发现——比例简直完美复刻`);
+    } else if (hDiff === 1) {
+      parts.push(`身高${hLabels[selected.height]}与${c.name}仅一线之隔，穿对鞋子就是满分还原`);
+    }
+    
+    // Build narrative
+    if (selected.build && c.build === selected.build) {
+      parts.push(`你的${buildNames[selected.build]}体型与${c.name}的身材比例高度重合，出装后线条感浑然天成`);
+    }
+    
+    // Fullness match
+    if (faceData.fullness === 'soft' && c.face === 'round') {
+      parts.push(`你的面部饱满柔和，${c.name}的圆润感正是需要这样的温柔气质`);
+    }
+    if (faceData.fullness === 'slim' && c.face === 'heart') {
+      parts.push(`你的清瘦面庞搭配${c.name}的精致下颌，举手投足都是高级感`);
+    }
+    
+    const narrative = parts.join('；') + '。';
+    
+    // Special highlight
+    let highlight = '';
+    if (matchPct >= 70) highlight = '💎 天选之人';
+    else if (matchPct >= 50) highlight = '🌟 高度契合';
+    else if (matchPct >= 30) highlight = '✨ 气质匹配';
+    else highlight = '🎭 值得尝试';
+    
+    return {char:c, score:r.score, narrative, matchPct, highlight, isLocked:i>=3};
+  });
+
   const list = document.getElementById('resultList');
-  list.innerHTML = results.map((r,i) => {
-    const c = r.char; const isLocked = i >= 3;
-    const maxScore = 100; const matchPct = Math.min(99, Math.round(r.score / maxScore * 100));
-    const imgUrl = c.img ? `images/characters/${c.img}.jpg` : '';
-    const costLabel = {low:'500以内','mid-low':'500-1000',mid:'1000-2000',high:'2000+'};
+  const costLabel = {low:'500以内','mid-low':'500-1000',mid:'1000-2000',high:'2000+'};
+  
+  list.innerHTML = resultsWithNarratives.map((r,i) => {
+    const c = r.char; const imgUrl = c.img ? `images/characters/${c.img}.jpg` : '';
     const sc = seriesColors[c.series] || defaultColor;
     return `
-      <div class="char-card${isLocked?' premium':''}">
+      <div class="char-card${r.isLocked?' premium':''}">
         <div class="char-rank">#${i+1}</div>
         <div class="char-img-wrap" style="background:radial-gradient(ellipse at 30% 20%,rgba(${sc},0.2),transparent 70%),linear-gradient(135deg,rgba(${sc},0.12),rgba(0,0,0,0.3))">
           ${c.img ? `<img class="char-img" src="${imgUrl}" alt="${c.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
@@ -559,20 +620,22 @@ function diagnose() {
         </div>
         <div class="char-header">
           <div class="char-info">
-            <div class="char-name">${c.name}</div>
+            <div class="char-name">${c.name} <span class="char-highlight">${r.highlight}</span></div>
             <div class="char-series">${c.series}</div>
           </div>
-          <div class="char-match">${matchPct}%</div>
+          <div class="char-match">${r.matchPct}%</div>
         </div>
         <div class="char-why">
-          <strong>为什么适合你：</strong>你的脸型是<strong>${shapeNames[faceData.faceShape]}</strong>（宽高比${faceData.fwFh}），${c.name}的脸型为${shapeNames[c.face]}→${r.reasons.join(' · ')}
+          <div class="char-why-icon">💫</div>
+          <div class="char-why-text">${r.narrative}</div>
         </div>
+        ${!r.isLocked ? `<div class="char-vision">👁️ 想象一下：漫展上你以${c.name}的姿态出现，${c.tags.slice(-1)[0]}的魅力让所有镜头对准你</div>` : ''}
         <div class="char-tags">
           ${c.tags.map(t => `<span class="char-tag ${t==='可爱'||t==='低门槛'?'pink':t==='经典'?'green':''}">${t}</span>`).join('')}
         </div>
         <div class="char-cost">
           <span>💰 预估 <b>${costLabel[c.cost]||'待定'}</b></span>
-          ${!isLocked?`<span style="color:#ff9ec4;cursor:pointer;margin-left:auto;" onclick="showToast('🔒 详细出装清单为付费功能（开发中）')">📋 看出装清单 →</span>`:''}
+          ${!r.isLocked?`<span style="color:#ff9ec4;cursor:pointer;margin-left:auto;" onclick="showToast('🔒 详细出装清单为付费功能（开发中）')">📋 看出装清单 →</span>`:''}
         </div>
       </div>`;
   }).join('');
