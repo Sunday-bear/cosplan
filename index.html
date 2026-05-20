@@ -6,7 +6,7 @@
   <title>Cosplan · 角色快诊</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js" onerror="var s=this;s.onerror=null;s.src='https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js';s.addEventListener('error',function(){var l=document.createElement('script');l.src='face-api.min.js';document.head.appendChild(l)})"></script>
+  <script defer src="face-api.min.js""></script>
   <style>
     :root {
       --pink:#ff6b9d;--purple:#7c3aed;--bg:#0d0614;--card:rgba(255,255,255,0.06);
@@ -269,11 +269,11 @@ async function loadModels() {
   if (modelsLoaded) return;
   showLoading('加载 AI 模型...');
   try {
-    // Wait for face-api to be available (CDN may be slow in China)
+    // Wait for face-api to be available (local file should be fast)
     let waited = 0;
     while (typeof faceapi === 'undefined' || !faceapi.nets) {
-      if (waited > 30) throw new Error('face-api.js CDN 超时');
-      await new Promise(r => setTimeout(r, 1000));
+      if (waited > 10) throw new Error('face-api.js 加载超时');
+      await new Promise(r => setTimeout(r, 500));
       waited++;
     }
     await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
@@ -281,7 +281,7 @@ async function loadModels() {
     modelsLoaded = true;
   } catch(e) {
     console.error('Model load error:', e);
-    const msg = e.message && e.message.includes('CDN') ? '⚠️ CDN加载超时，请检查网络后刷新' : '⚠️ 模型加载失败，请刷新重试';
+    const msg = '⚠️ AI模型加载失败: ' + (e.message || '未知错误');
     showToast(msg);
   }
   hideLoading();
