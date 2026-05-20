@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>绝区零 红豆 · Cos种草指南</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+    background: #0a0a0f;
+    color: #e8e8ec;
+    display: flex; justify-content: center;
+    padding: 40px 20px;
+  }
+  .page {
+    max-width: 420px; width: 100%;
+    background: #111118;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  /* Hero section - 氛围感 banner */
+  .hero {
+    position: relative; width: 100%; height: 360px;
+    background: linear-gradient(180deg, #1a1020 0%, #0d1825 40%, #111118 100%);
+    overflow: hidden;
+  }
+  .hero img {
+    width: 100%; height: 100%; object-fit: cover;
+    filter: brightness(0.75) saturate(1.1);
+  }
+  .hero .gradient-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(17,17,24,0.1) 60%,
+      rgba(17,17,24,0.85) 90%,
+      rgba(17,17,24,0.98) 100%
+    );
+  }
+  .hero .title-block {
+    position: absolute; bottom: 24px; left: 20px; right: 20px;
+    z-index: 2;
+  }
+  .hero .game-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px);
+    padding: 5px 14px; border-radius: 20px;
+    font-size: 12px; color: #b8a0ff;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .hero .game-tag .dot { width:6px; height:6px; background:#b8a0ff; border-radius:50%; }
+  .hero h1 {
+    font-size: 36px; font-weight: 900; color: #fff;
+    letter-spacing: 2px; text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  }
+  .hero .subtitle {
+    font-size: 13px; color: rgba(255,255,255,0.5);
+    margin-top: 4px; letter-spacing: 0.5px;
+  }
+  .hero .seed-badge {
+    position: absolute; top: 20px; right: 20px;
+    background: linear-gradient(135deg, #ff6b9d, #c44dff);
+    color: #fff; font-size: 11px; font-weight: 700;
+    padding: 6px 16px; border-radius: 20px;
+    z-index: 3; letter-spacing: 1px;
+    box-shadow: 0 4px 20px rgba(196,77,255,0.3);
+  }
+
+  /* Official art section */
+  .section-label {
+    display: flex; align-items: center; gap: 10px;
+    padding: 24px 20px 12px;
+  }
+  .section-label .icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .section-label .icon.original { background: rgba(255,204,0,0.15); }
+  .section-label .icon.cosplay { background: rgba(255,107,157,0.15); }
+  .section-label .text { font-size: 16px; font-weight: 700; }
+  .section-label .count {
+    font-size: 12px; color: #666; margin-left: auto;
+  }
+  .official-card {
+    margin: 0 16px; border-radius: 14px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  }
+  .official-card img {
+    width: 100%; display: block;
+  }
+  .official-card .caption {
+    padding: 10px 14px; background: rgba(255,255,255,0.03);
+    font-size: 11px; color: #888;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .official-card .caption .source-dot {
+    width: 4px; height: 4px; background: #ffcc00; border-radius: 50%;
+  }
+
+  /* Cosplay grid */
+  .cos-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; padding: 0 16px 8px;
+  }
+  .cos-item {
+    border-radius: 12px; overflow: hidden;
+    position: relative; aspect-ratio: 3/4;
+    border: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .cos-item:hover { transform: scale(1.02); }
+  .cos-item img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .cos-item .cos-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 50%);
+  }
+  .cos-item .cos-info {
+    position: absolute; bottom: 8px; left: 8px; right: 8px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .cos-item .coser {
+    font-size: 10px; color: rgba(255,255,255,0.8);
+    background: rgba(0,0,0,0.5); padding: 3px 8px;
+    border-radius: 6px; backdrop-filter: blur(4px);
+  }
+  .cos-item .rank-badge {
+    font-size: 10px; color: #ffcc00; font-weight: 700;
+    background: rgba(0,0,0,0.5); padding: 3px 8px;
+    border-radius: 6px; backdrop-filter: blur(4px);
+    display: flex; align-items: center; gap: 3px;
+  }
+
+  /* Full-width cos (spotlight) */
+  .cos-spotlight {
+    margin: 8px 16px; border-radius: 14px; overflow: hidden;
+    position: relative; aspect-ratio: 16/10;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .cos-spotlight img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .cos-spotlight .spotlight-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,0,0,0.5) 0%, transparent 40%, rgba(0,0,0,0.6) 100%);
+  }
+  .cos-spotlight .spotlight-tag {
+    position: absolute; top: 14px; left: 14px;
+    background: linear-gradient(135deg, #ff6b9d, #c44dff);
+    color: #fff; font-size: 11px; font-weight: 700;
+    padding: 5px 14px; border-radius: 14px;
+    letter-spacing: 0.5px;
+  }
+  .cos-spotlight .spotlight-coser {
+    position: absolute; bottom: 14px; right: 14px;
+    font-size: 12px; color: rgba(255,255,255,0.8);
+    background: rgba(0,0,0,0.5); padding: 5px 12px;
+    border-radius: 8px; backdrop-filter: blur(4px);
+  }
+
+  /* CTA / 种草 footer */
+  .cta-section {
+    margin: 20px 16px 24px; padding: 20px;
+    background: linear-gradient(135deg, rgba(255,107,157,0.08), rgba(196,77,255,0.08));
+    border-radius: 16px; border: 1px solid rgba(255,107,157,0.15);
+  }
+  .cta-section .cta-text {
+    font-size: 14px; line-height: 1.7; color: #ccc;
+    margin-bottom: 14px;
+  }
+  .cta-section .cta-text .highlight {
+    color: #ff6b9d; font-weight: 600;
+  }
+  .cta-section .cta-tags {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .cta-section .cta-tag {
+    font-size: 11px; padding: 5px 14px;
+    border-radius: 16px; font-weight: 500;
+    background: rgba(255,255,255,0.06); color: #aaa;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .cta-section .cta-tag.hot {
+    background: rgba(255,107,157,0.12); color: #ff6b9d;
+    border-color: rgba(255,107,157,0.2);
+  }
+
+  /* Footer bar */
+  .bottom-bar {
+    display: flex; gap: 10px; padding: 12px 16px 20px;
+  }
+  .bottom-bar .btn {
+    flex: 1; text-align: center; padding: 12px;
+    border-radius: 24px; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.5px; cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .bottom-bar .btn:hover { transform: scale(1.03); }
+  .bottom-bar .btn-primary {
+    background: linear-gradient(135deg, #ff6b9d, #c44dff);
+    color: #fff; box-shadow: 0 4px 20px rgba(196,77,255,0.25);
+  }
+  .bottom-bar .btn-secondary {
+    background: rgba(255,255,255,0.06);
+    color: #aaa; border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Watermark removal note */
+  .watermark-note {
+    margin: 8px 16px; padding: 10px 14px;
+    background: rgba(255,204,0,0.06);
+    border: 1px solid rgba(255,204,0,0.15);
+    border-radius: 10px; font-size: 11px; color: #997700;
+    display: flex; align-items: center; gap: 6px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Hero Banner -->
+  <div class="hero">
+    <img src="zzz_redbean/official_01.jpg" alt="绝区零 红豆 原画">
+    <div class="gradient-overlay"></div>
+    <span class="seed-badge">🔥 种草必备</span>
+    <div class="title-block">
+      <span class="game-tag"><span class="dot"></span>绝区零 · ZENLESS ZONE ZERO</span>
+      <h1>红豆</h1>
+      <p class="subtitle">饮茶仙老板娘 · 白祇重工 · Red Bean</p>
+    </div>
+  </div>
+
+  <!-- 原版角色区域 -->
+  <div class="section-label">
+    <span class="icon original">🎮</span>
+    <span class="text">原版角色鉴赏</span>
+    <span class="count">游戏实机 / 官方素材</span>
+  </div>
+  <div class="official-card">
+    <img src="zzz_redbean/official_02.jpg" alt="红豆 游戏实机截图">
+    <div class="caption">
+      <span class="source-dot"></span>红豆 — 饮茶仙老板娘，绝区零人气NPC
+    </div>
+  </div>
+  <div class="official-card" style="margin-top:8px;">
+    <img src="zzz_redbean/official_03.jpg" alt="红豆 角色展示">
+    <div class="caption">
+      <span class="source-dot"></span>对话互动 / 角色动作展示
+    </div>
+  </div>
+
+  <!-- Cosplay 精选 -->
+  <div class="section-label">
+    <span class="icon cosplay">✨</span>
+    <span class="text">神仙Cos精选</span>
+    <span class="count">还原度爆表 · 5组精选</span>
+  </div>
+
+  <!-- Spotlight cos (最佳) -->
+  <div class="cos-spotlight">
+    <img src="zzz_redbean/cos_02.jpg" alt="红豆 COS 精选">
+    <div class="spotlight-overlay"></div>
+    <span class="spotlight-tag">🌟 精选推荐</span>
+    <span class="spotlight-coser">📸 小红书coser</span>
+  </div>
+
+  <!-- Cos grid 2x2 -->
+  <div class="cos-grid">
+    <div class="cos-item">
+      <img src="zzz_redbean/cos_04.jpg" alt="红豆 COS">
+      <div class="cos-overlay"></div>
+      <div class="cos-info">
+        <span class="coser">@coser</span>
+        <span class="rank-badge">⭐ 还原</span>
+      </div>
+    </div>
+    <div class="cos-item">
+      <img src="zzz_redbean/cos_06.jpg" alt="红豆 COS">
+      <div class="cos-overlay"></div>
+      <div class="cos-info">
+        <span class="coser">@coser</span>
+        <span class="rank-badge">⭐ 神似</span>
+      </div>
+    </div>
+    <div class="cos-item">
+      <img src="zzz_redbean/cos_07.jpg" alt="红豆 COS">
+      <div class="cos-overlay"></div>
+      <div class="cos-info">
+        <span class="coser">@coser</span>
+      </div>
+    </div>
+    <div class="cos-item">
+      <img src="zzz_redbean/cos_08.jpg" alt="红豆 COS">
+      <div class="cos-overlay"></div>
+      <div class="cos-info">
+        <span class="coser">@coser</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watermark note -->
+  <div class="watermark-note">
+    ⚠️ 部分图片来源于网络（百度/小红书/B站），如需去除水印请告知具体图片
+  </div>
+
+  <!-- 种草 CTA -->
+  <div class="cta-section">
+    <p class="cta-text">
+      💘 绝区零<span class="highlight">红豆</span> — 饮茶仙的老板娘，高马尾+和风围裙，游戏里最让人想喝茶的NPC！<br><br>
+      这<span class="highlight">还原度</span>谁看了不心动？从服装细节到神态气质，每一位coser都把红豆的温柔和俏皮拿捏得死死的。
+      <br><br>看完直接想去搜同款、存图、甚至<span class="highlight">自己出c</span>！🔥
+    </p>
+    <div class="cta-tags">
+      <span class="cta-tag hot">#绝区零红豆</span>
+      <span class="cta-tag hot">#Cos种草</span>
+      <span class="cta-tag">#神仙coser</span>
+      <span class="cta-tag">#还原度爆表</span>
+      <span class="cta-tag">#饮茶仙老板娘</span>
+      <span class="cta-tag">#二次元cos</span>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="bottom-bar">
+    <span class="btn btn-primary">❤️ 收藏种草</span>
+    <span class="btn btn-secondary">🔍 搜同款cos</span>
+  </div>
+
+</div>
+</body>
+</html>

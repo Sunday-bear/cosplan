@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>绝区零 · Cos角色匹配推荐</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  background:#0a0a0f;color:#e8e8ec;
+  display:flex;justify-content:center;
+  padding:40px 20px;min-height:100vh;
+}
+.page{max-width:420px;width:100%}
+
+/* ====== ENTRY VIEW ====== */
+#entry-view{display:block}
+#detail-view{display:none}
+
+.result-header{text-align:center;padding:30px 20px 20px}
+.result-header .badge{
+  display:inline-block;background:linear-gradient(135deg,#ff6b9d,#c44dff);
+  color:#fff;font-size:11px;font-weight:700;padding:5px 16px;
+  border-radius:16px;letter-spacing:.5px;margin-bottom:12px;
+}
+.result-header h2{
+  font-size:24px;font-weight:900;
+  background:linear-gradient(135deg,#ff6b9d,#c44dff,#b8a0ff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:6px;
+}
+.result-header .sub{font-size:13px;color:#777}
+.match-score{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  margin:12px 0 24px;
+}
+.match-score .score-ring{
+  width:64px;height:64px;border-radius:50%;
+  background:conic-gradient(#c44dff 0deg 312deg, rgba(255,255,255,.04) 312deg 360deg);
+  display:flex;align-items:center;justify-content:center;position:relative;
+}
+.match-score .score-ring::after{
+  content:'';position:absolute;
+  width:48px;height:48px;border-radius:50%;background:#0a0a0f;
+}
+.match-score .score-val{position:relative;z-index:1;font-size:18px;font-weight:900;color:#fff}
+.match-score .score-text{font-size:12px;color:#888}
+.match-score .score-text strong{color:#c44dff}
+
+.section-title{display:flex;align-items:center;gap:8px;padding:0 16px 14px}
+.section-title .dot{width:6px;height:6px;background:#ff6b9d;border-radius:50%}
+.section-title span{font-size:16px;font-weight:700}
+.section-title .hint{font-size:11px;color:#666;margin-left:auto}
+
+.char-list{display:flex;flex-direction:column;gap:14px;padding:0 12px;margin-bottom:30px}
+.char-card{
+  background:#111118;border-radius:16px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.05);
+  cursor:pointer;transition:transform .2s,border-color .2s;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
+.char-card:hover{transform:translateY(-2px);border-color:rgba(255,107,157,.2)}
+.char-card .card-top{display:flex;gap:14px;padding:16px}
+.char-card .thumbnail{
+  width:90px;height:120px;border-radius:10px;overflow:hidden;
+  flex-shrink:0;position:relative;border:1px solid rgba(255,255,255,.06);
+}
+.char-card .thumbnail img{width:100%;height:100%;object-fit:cover}
+.char-card .thumbnail .match-pct{
+  position:absolute;bottom:6px;right:6px;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(4px);
+  color:#c44dff;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:8px;
+}
+.char-card .info{flex:1;display:flex;flex-direction:column;justify-content:center}
+.char-card .info .char-name{font-size:20px;font-weight:900;margin-bottom:2px}
+.char-card .info .char-title{font-size:11px;color:#888;margin-bottom:8px}
+.char-card .info .match-bar-bg{
+  height:4px;background:rgba(255,255,255,.06);border-radius:2px;
+  margin-bottom:10px;overflow:hidden;
+}
+.char-card .info .match-bar-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,#ff6b9d,#c44dff);
+}
+.char-card .info .seed-line{
+  font-size:11px;color:#aaa;line-height:1.5;
+  display:flex;align-items:flex-start;gap:4px;
+}
+.char-card .cos-strip{display:flex;gap:4px;padding:0 16px 4px}
+.char-card .cos-strip img{
+  width:48px;height:48px;border-radius:6px;object-fit:cover;
+  border:1px solid rgba(255,255,255,.04);
+}
+.char-card .cos-strip .more{
+  width:48px;height:48px;border-radius:6px;
+  background:rgba(255,255,255,.03);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:#888;flex-shrink:0;
+}
+.char-card .card-cta{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px 14px;border-top:1px solid rgba(255,255,255,.03);
+}
+.char-card .card-cta .tags{display:flex;gap:6px;flex-wrap:wrap}
+.char-card .card-cta .tag{
+  font-size:10px;padding:3px 10px;border-radius:10px;
+  background:rgba(255,107,157,.08);color:#ff6b9d;
+  border:1px solid rgba(255,107,157,.1);
+}
+.char-card .card-cta .arrow{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#ff6b9d,#c44dff);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:#fff;flex-shrink:0;
+}
+.bottom-note{text-align:center;padding:20px}
+.bottom-note p{font-size:12px;color:#555}
+
+/* ====== DETAIL VIEW ====== */
+.back-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:12px 16px;margin-bottom:8px;
+  font-size:13px;color:#888;cursor:pointer;
+  background:none;border:none;font-family:inherit;
+}
+.back-btn:hover{color:#fff}
+
+.hero{position:relative;width:100%;height:360px;overflow:hidden;border-radius:16px 16px 0 0}
+.hero img{width:100%;height:100%;object-fit:cover;filter:brightness(.75) saturate(1.1)}
+.hero .gradient-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(17,17,24,.1) 60%,rgba(17,17,24,.85) 90%,#111118 100%);
+}
+.hero .title-block{position:absolute;bottom:24px;left:20px;right:20px;z-index:2}
+.hero .game-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.08);backdrop-filter:blur(8px);
+  padding:5px 14px;border-radius:20px;
+  font-size:12px;color:#b8a0ff;margin-bottom:8px;
+  border:1px solid rgba(255,255,255,.06);
+}
+.hero .game-tag .dot{width:6px;height:6px;background:#b8a0ff;border-radius:50%}
+.hero h1{font-size:36px;font-weight:900;color:#fff;letter-spacing:2px;text-shadow:0 2px 20px rgba(0,0,0,.5)}
+.hero .subtitle{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px;letter-spacing:.5px}
+.hero .seed-badge{
+  position:absolute;top:20px;right:20px;
+  background:linear-gradient(135deg,#ff6b9d,#c44dff);
+  color:#fff;font-size:11px;font-weight:700;
+  padding:6px 16px;border-radius:20px;
+  z-index:3;box-shadow:0 4px 20px rgba(196,77,255,.3);
+}
+
+.detail-content{background:#111118;border-radius:0 0 16px 16px;padding:4px 0 20px}
+.detail-content .section-label{
+  display:flex;align-items:center;gap:10px;padding:24px 16px 12px;
+}
+.detail-content .section-label .icon{
+  width:28px;height:28px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+.detail-content .section-label .icon.original{background:rgba(255,204,0,.15)}
+.detail-content .section-label .icon.cosplay{background:rgba(255,107,157,.15)}
+.detail-content .section-label .text{font-size:16px;font-weight:700}
+.detail-content .section-label .count{font-size:12px;color:#666;margin-left:auto}
+
+.official-card{
+  margin:0 12px 8px;border-radius:14px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.05);
+  box-shadow:0 8px 30px rgba(0,0,0,.3);
+}
+.official-card img{width:100%;display:block}
+.official-card .caption{
+  padding:10px 14px;background:rgba(255,255,255,.03);
+  font-size:11px;color:#888;display:flex;align-items:center;gap:6px;
+}
+.official-card .caption .source-dot{width:4px;height:4px;background:#ffcc00;border-radius:50%}
+
+.cos-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 8px}
+.cos-item{
+  border-radius:12px;overflow:hidden;aspect-ratio:3/4;
+  position:relative;border:1px solid rgba(255,255,255,.04);
+}
+.cos-item img{width:100%;height:100%;object-fit:cover}
+.cos-item .cos-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(0deg,rgba(0,0,0,.7) 0%,transparent 50%);
+}
+.cos-item .cos-info{
+  position:absolute;bottom:8px;left:8px;right:8px;
+  display:flex;justify-content:space-between;align-items:flex-end;
+}
+.cos-item .coser{
+  font-size:10px;color:rgba(255,255,255,.8);
+  background:rgba(0,0,0,.5);padding:3px 8px;
+  border-radius:6px;backdrop-filter:blur(4px);
+}
+
+.cta-section{
+  margin:16px 12px;padding:20px;
+  background:linear-gradient(135deg,rgba(255,107,157,.08),rgba(196,77,255,.08));
+  border-radius:16px;border:1px solid rgba(255,107,157,.15);
+}
+.cta-section .cta-text{font-size:14px;line-height:1.7;color:#ccc;margin-bottom:14px}
+.cta-section .cta-text .highlight{color:#ff6b9d;font-weight:600}
+.cta-section .cta-tags{display:flex;flex-wrap:wrap;gap:8px}
+.cta-section .cta-tag{
+  font-size:11px;padding:5px 14px;border-radius:16px;font-weight:500;
+  background:rgba(255,255,255,.06);color:#aaa;
+  border:1px solid rgba(255,255,255,.08);
+}
+.cta-section .cta-tag.hot{
+  background:rgba(255,107,157,.12);color:#ff6b9d;
+  border-color:rgba(255,107,157,.2);
+}
+.bottom-bar{display:flex;gap:10px;padding:12px 16px 20px}
+.bottom-bar .btn{
+  flex:1;text-align:center;padding:12px;border-radius:24px;
+  font-size:13px;font-weight:700;letter-spacing:.5px;
+}
+.bottom-bar .btn-primary{
+  background:linear-gradient(135deg,#ff6b9d,#c44dff);
+  color:#fff;box-shadow:0 4px 20px rgba(196,77,255,.25);
+}
+.bottom-bar .btn-secondary{
+  background:rgba(255,255,255,.06);
+  color:#aaa;border:1px solid rgba(255,255,255,.08);
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ======== ENTRY VIEW ======== -->
+<div id="entry-view">
+  <div class="result-header">
+    <span class="badge">🎯 匹配诊断完成</span>
+    <h2>你的绝区零角色推荐</h2>
+    <p class="sub">基于面部特征 + 身材比例 · AI匹配</p>
+    <div class="match-score">
+      <div class="score-ring"><span class="score-val">87%</span></div>
+      <div class="score-text">共匹配 <strong>3</strong> 位角色<br>点击卡片查看详情 👇</div>
+    </div>
+  </div>
+  <div class="section-title">
+    <span class="dot"></span><span>为你推荐</span>
+    <span class="hint">按匹配度排序</span>
+  </div>
+  <div class="char-list">
+    <!-- Card 1: 红豆 -->
+    <div class="char-card" onclick="showDetail('hongdou')">
+      <div class="card-top">
+        <div class="thumbnail">
+          <img src="official_01.jpg" alt="红豆">
+          <span class="match-pct">92%</span>
+        </div>
+        <div class="info">
+          <div class="char-name">红豆</div>
+          <div class="char-title">绝区零 · 饮茶仙老板娘</div>
+          <div class="match-bar-bg"><div class="match-bar-fill" style="width:92%"></div></div>
+          <div class="seed-line"><span>💘</span> 高马尾+和风围裙，温柔老板娘气质和你绝配！</div>
+        </div>
+      </div>
+      <div class="cos-strip">
+        <img src="hongdou_realcos/cos_01.jpg"><img src="hongdou_realcos/cos_02.jpg"><img src="hongdou_realcos/cos_03.jpg"><img src="hongdou_realcos/cos_04.jpg">
+        <div class="more">+3</div>
+      </div>
+      <div class="card-cta">
+        <div class="tags">
+          <span class="tag">#神仙还原</span><span class="tag">#必种草</span><span class="tag">#7组cos</span>
+        </div>
+        <span class="arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Card 2: 浮波柚叶 -->
+    <div class="char-card" onclick="showDetail('yuzuye')">
+      <div class="card-top">
+        <div class="thumbnail">
+          <img src="yuzuye/official_01.png" alt="柚叶">
+          <span class="match-pct">87%</span>
+        </div>
+        <div class="info">
+          <div class="char-name">浮波柚叶</div>
+          <div class="char-title">绝区零 · 白祇重工</div>
+          <div class="match-bar-bg"><div class="match-bar-fill" style="width:87%"></div></div>
+          <div class="seed-line"><span>🍃</span> 黑长直+和风浴衣，冷艳气质coser必备～出片率超高！</div>
+        </div>
+      </div>
+      <div class="cos-strip">
+        <img src="yuzuye_realcos/cos_01.jpg"><img src="yuzuye_realcos/cos_02.jpg"><img src="yuzuye_realcos/cos_03.jpg"><img src="yuzuye_realcos/cos_04.jpg">
+        <div class="more">+4</div>
+      </div>
+      <div class="card-cta">
+        <div class="tags">
+          <span class="tag">#人气角色</span><span class="tag">#和风cos</span><span class="tag">#6组cos</span>
+        </div>
+        <span class="arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Card 3: 爱丽丝 -->
+    <div class="char-card" onclick="showDetail('alice')">
+      <div class="card-top">
+        <div class="thumbnail">
+          <img src="alice/official_01.png" alt="爱丽丝">
+          <span class="match-pct">81%</span>
+        </div>
+        <div class="info">
+          <div class="char-name">爱丽丝</div>
+          <div class="char-title">绝区零 · 白祇重工</div>
+          <div class="match-bar-bg"><div class="match-bar-fill" style="width:81%"></div></div>
+          <div class="seed-line"><span>🎀</span> 双马尾+机械臂，反差萌拉满！萝莉体型cos难度低～</div>
+        </div>
+      </div>
+      <div class="cos-strip">
+        <img src="alice_realcos/cos_01.jpg"><img src="alice_realcos/cos_02.jpg"><img src="alice_realcos/cos_03.jpg"><img src="alice_realcos/cos_04.jpg">
+        <div class="more">+3</div>
+      </div>
+      <div class="card-cta">
+        <div class="tags">
+          <span class="tag">#反差萌</span><span class="tag">#新手友好</span><span class="tag">#7组cos</span>
+        </div>
+        <span class="arrow">→</span>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-note"><p>⬆ 点击角色卡片，查看原版立绘 + cos精选</p></div>
+</div>
+
+<!-- ======== DETAIL VIEW ======== -->
+<div id="detail-view"></div>
+
+</div>
+<script>
+const data = {
+  hongdou: {
+    heroImg: 'official_01.jpg',
+    name: '红豆', subtitle: '饮茶仙老板娘 · 白祇重工 · Red Bean',
+    official: [
+      {img:'official_02.jpg', cap:'红豆 — 饮茶仙老板娘，绝区零人气NPC'},
+      {img:'official_03.jpg', cap:'对话互动 / 角色动作展示'}
+    ],
+    cos: ['hongdou_realcos/cos_01.jpg','hongdou_realcos/cos_02.jpg','hongdou_realcos/cos_03.jpg','hongdou_realcos/cos_04.jpg','hongdou_realcos/cos_05.jpg','hongdou_realcos/cos_06.jpg','hongdou_realcos/cos_07.jpg'],
+    seedText: '💘 绝区零<span class="highlight">红豆</span> — 饮茶仙的老板娘，高马尾+和风围裙，游戏里最让人想喝茶的NPC！<br><br>这<span class="highlight">还原度</span>谁看了不心动？以上均为微博真实coser正片，每一位都把红豆的温柔和俏皮拿捏得死死的。<br><br>看完直接想去搜同款、存图、甚至<span class="highlight">自己出c</span>！🔥',
+    tags: ['#绝区零红豆','#Cos种草','#神仙coser','#还原度爆表','#饮茶仙老板娘','#微博cos正片']
+  },
+  yuzuye: {
+    heroImg: 'yuzuye/official_01.png',
+    name: '浮波柚叶', subtitle: '白祇重工 · 和风浴衣 · Yuzuha',
+    official: [
+      {img:'yuzuye/official_01.png', cap:'浮波柚叶 — 白祇重工成员，黑长直美人'}
+    ],
+    cos: ['yuzuye_realcos/cos_01.jpg','yuzuye_realcos/cos_02.jpg','yuzuye_realcos/cos_03.jpg','yuzuye_realcos/cos_04.jpg','yuzuye/cos_03.jpg','yuzuye/cos_06.jpg'],
+    seedText: '🍃 <span class="highlight">浮波柚叶</span> — 绝区零白祇重工的冷艳担当，黑长直+和风浴衣的组合谁顶得住？<br><br>这位coser的<span class="highlight">气质还原</span>简直神了，从眼神到姿态，把柚叶的清冷和优雅完美复刻！<br><br>和风角色出片率极高，浴衣+道具的搭配让每张cos都像<span class="highlight">画报</span>一样美🔥',
+    tags: ['#绝区零浮波柚叶','#Cos种草','#黑长直','#和风cos','#白祇重工','#二次元cos']
+  },
+  alice: {
+    heroImg: 'alice/official_01.png',
+    name: '爱丽丝', subtitle: '白祇重工 · 双马尾 · Alice',
+    official: [
+      {img:'alice/official_01.png', cap:'爱丽丝 — 白祇重工，双马尾机械臂少女'}
+    ],
+    cos: ['alice_realcos/cos_01.jpg','alice_realcos/cos_02.jpg','alice_realcos/cos_03.jpg','alice_realcos/cos_04.jpg','alice/cos_05.jpg','alice/cos_07.jpg'],
+    seedText: '🎀 <span class="highlight">爱丽丝</span> — 绝区零白祇重工的萌系担当，双马尾+机械臂的反差萌让人无法抗拒！<br><br>coser们的<span class="highlight">还原度</span>太高了，从双马尾的蓬松感到机械臂的质感，细节满分！<br><br>萝莉体型的cos难度相对较低，<span class="highlight">新手友好</span>，看完就想试🔥',
+    tags: ['#绝区零爱丽丝','#Cos种草','#双马尾','#反差萌','#白祇重工','#新手友好']
+  }
+};
+
+function showDetail(key) {
+  const d = data[key];
+  const cosItems = d.cos.slice(0,4).map((c,i) => `
+    <div class="cos-item">
+      <img src="${c}" alt="cos${i+1}">
+      <div class="cos-overlay"></div>
+      <div class="cos-info"><span class="coser">@coser</span></div>
+    </div>`).join('');
+
+  const extraCos = d.cos.length > 4 ? d.cos.slice(4).map(c => `
+    <div class="cos-item"><img src="${c}" alt="cos"><div class="cos-overlay"></div></div>`).join('') : '';
+
+  const officialCards = d.official.map(o => `
+    <div class="official-card">
+      <img src="${o.img}" alt="official">
+      <div class="caption"><span class="source-dot"></span>${o.cap}</div>
+    </div>`).join('');
+
+  document.getElementById('detail-view').innerHTML = `
+    <button class="back-btn" onclick="backToEntry()">← 返回推荐列表</button>
+    <div class="hero">
+      <img src="${d.heroImg}" alt="${d.name}">
+      <div class="gradient-overlay"></div>
+      <span class="seed-badge">🔥 种草必备</span>
+      <div class="title-block">
+        <span class="game-tag"><span class="dot"></span>绝区零 · ZENLESS ZONE ZERO</span>
+        <h1>${d.name}</h1>
+        <p class="subtitle">${d.subtitle}</p>
+      </div>
+    </div>
+    <div class="detail-content">
+      <div class="section-label">
+        <span class="icon original">🎮</span><span class="text">原版角色鉴赏</span>
+        <span class="count">游戏实机 / 官方素材</span>
+      </div>
+      ${officialCards}
+      <div class="section-label">
+        <span class="icon cosplay">✨</span><span class="text">神仙Cos精选</span>
+        <span class="count">还原度爆表 · ${d.cos.length}组精选</span>
+      </div>
+      <div class="cos-grid">${cosItems}</div>
+      ${extraCos ? '<div class="cos-grid" style="margin-top:0">'+extraCos+'</div>' : ''}
+      <div class="cta-section">
+        <p class="cta-text">${d.seedText}</p>
+        <div class="cta-tags">
+          ${d.tags.map(t => t.startsWith('#') ? `<span class="cta-tag hot">${t}</span>` : `<span class="cta-tag">${t}</span>`).join('')}
+        </div>
+      </div>
+      <div class="bottom-bar">
+        <span class="btn btn-primary">❤️ 收藏种草</span>
+        <span class="btn btn-secondary">🔍 搜同款cos</span>
+      </div>
+    </div>`;
+
+  document.getElementById('entry-view').style.display = 'none';
+  document.getElementById('detail-view').style.display = 'block';
+  window.scrollTo(0,0);
+}
+
+function backToEntry() {
+  document.getElementById('entry-view').style.display = 'block';
+  document.getElementById('detail-view').style.display = 'none';
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>

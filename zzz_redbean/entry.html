@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角色推荐结果 · 绝区零Cos匹配</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+    background: #0a0a0f;
+    color: #e8e8ec;
+    display: flex; justify-content: center;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+  .page {
+    max-width: 420px; width: 100%;
+  }
+
+  /* Header */
+  .result-header {
+    text-align: center; padding: 30px 20px 20px;
+  }
+  .result-header .badge {
+    display: inline-block; background: linear-gradient(135deg,#ff6b9d,#c44dff);
+    color: #fff; font-size: 11px; font-weight: 700; padding: 5px 16px;
+    border-radius: 16px; letter-spacing: 0.5px; margin-bottom: 12px;
+  }
+  .result-header h2 {
+    font-size: 24px; font-weight: 900;
+    background: linear-gradient(135deg,#ff6b9d,#c44dff,#b8a0ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+  .result-header .sub {
+    font-size: 13px; color: #777;
+  }
+
+  /* Score circle */
+  .match-score {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    margin: 12px 0 24px;
+  }
+  .match-score .score-ring {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: conic-gradient(#c44dff 0deg 300deg, rgba(255,255,255,0.04) 300deg 360deg);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .match-score .score-ring::after {
+    content: ''; position: absolute;
+    width: 48px; height: 48px; border-radius: 50%; background: #0a0a0f;
+  }
+  .match-score .score-val {
+    position: relative; z-index: 1; font-size: 18px; font-weight: 900; color: #fff;
+  }
+  .match-score .score-text { font-size: 12px; color: #888; }
+  .match-score .score-text strong { color: #c44dff; }
+
+  /* Section title */
+  .section-title {
+    display: flex; align-items: center; gap: 8px; padding: 0 16px 14px;
+  }
+  .section-title .dot { width: 6px; height: 6px; background: #ff6b9d; border-radius: 50%; }
+  .section-title span { font-size: 16px; font-weight: 700; }
+  .section-title .hint { font-size: 11px; color: #666; margin-left: auto; }
+
+  /* Character cards */
+  .char-list {
+    display: flex; flex-direction: column; gap: 14px; padding: 0 12px;
+  }
+  .char-card {
+    background: #111118; border-radius: 16px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer; transition: transform 0.2s, border-color 0.2s;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .char-card:hover { transform: translateY(-2px); border-color: rgba(255,107,157,0.2); }
+  .char-card .card-top {
+    display: flex; gap: 14px; padding: 16px;
+  }
+  .char-card .thumbnail {
+    width: 90px; height: 120px; border-radius: 10px; overflow: hidden;
+    flex-shrink: 0; position: relative;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .char-card .thumbnail img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .char-card .thumbnail .match-pct {
+    position: absolute; bottom: 6px; right: 6px;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+    color: #c44dff; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 8px;
+  }
+  .char-card .info { flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .char-card .info .char-name {
+    font-size: 20px; font-weight: 900; margin-bottom: 2px;
+  }
+  .char-card .info .char-title {
+    font-size: 11px; color: #888; margin-bottom: 8px;
+  }
+  .char-card .info .match-bar-bg {
+    height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px;
+    margin-bottom: 10px; overflow: hidden;
+  }
+  .char-card .info .match-bar-fill {
+    height: 100%; border-radius: 2px;
+    background: linear-gradient(90deg, #ff6b9d, #c44dff);
+  }
+  .char-card .info .seed-line {
+    font-size: 11px; color: #aaa; line-height: 1.5;
+    display: flex; align-items: flex-start; gap: 4px;
+  }
+  .char-card .info .seed-line .seed-icon { margin-top: 1px; }
+
+  /* Cos preview strip */
+  .char-card .cos-strip {
+    display: flex; gap: 4px; padding: 0 16px 4px;
+  }
+  .char-card .cos-strip img {
+    width: 48px; height: 48px; border-radius: 6px; object-fit: cover;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .char-card .cos-strip .more {
+    width: 48px; height: 48px; border-radius: 6px;
+    background: rgba(255,255,255,0.03);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #888; flex-shrink: 0;
+  }
+
+  /* CTA button on each card */
+  .char-card .card-cta {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px 14px; border-top: 1px solid rgba(255,255,255,0.03);
+  }
+  .char-card .card-cta .tags {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .char-card .card-cta .tag {
+    font-size: 10px; padding: 3px 10px; border-radius: 10px;
+    background: rgba(255,107,157,0.08); color: #ff6b9d;
+    border: 1px solid rgba(255,107,157,0.1);
+  }
+  .char-card .card-cta .arrow {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg,#ff6b9d,#c44dff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #fff; flex-shrink: 0;
+  }
+
+  /* CTA bottom */
+  .bottom-note {
+    text-align: center; padding: 20px; margin-top: 8px;
+  }
+  .bottom-note p { font-size: 12px; color: #555; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Results header -->
+  <div class="result-header">
+    <span class="badge">🎯 匹配诊断完成</span>
+    <h2>你的绝区零角色推荐</h2>
+    <p class="sub">基于面部特征 + 身材比例 · AI匹配</p>
+    <div class="match-score">
+      <div class="score-ring"><span class="score-val"></span></div>
+      <div class="score-text">
+        共匹配 <strong>3</strong> 位角色<br>点击卡片查看详情 👇
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <span class="dot"></span>
+    <span>为你推荐</span>
+    <span class="hint">按匹配度排序</span>
+  </div>
+
+  <!-- Character cards -->
+  <div class="char-list">
+
+    <!-- Card 1: 红豆 (top match) -->
+    <div class="char-card" onclick="this.style.borderColor='rgba(196,77,255,0.3)'">
+      <div class="card-top">
+        <div class="thumbnail">
+          <img src="zzz_redbean/official_01.jpg" alt="红豆">
+          <span class="match-pct">92%</span>
+        </div>
+        <div class="info">
+          <div class="char-name">红豆</div>
+          <div class="char-title">绝区零 · 饮茶仙老板娘</div>
+          <div class="match-bar-bg"><div class="match-bar-fill" style="width:92%"></div></div>
+          <div class="seed-line">
+            <span class="seed-icon">💘</span>
+            <span>高马尾+和风围裙，温柔老板娘气质和你绝配！cos还原度超高，建议入手～</span>
+          </div>
+        </div>
+      </div>
+      <div class="cos-strip">
+        <img src="zzz_redbean/cos_02.jpg" alt="cos1">
+        <img src="zzz_redbean/cos_04.jpg" alt="cos2">
+        <img src="zzz_redbean/cos_06.jpg" alt="cos3">
+        <img src="zzz_redbean/cos_07.jpg" alt="cos4">
+        <div class="more">+2</div>
+      </div>
+      <div class="card-cta">
+        <div class="tags">
+          <span class="tag">#神仙还原</span>
+          <span class="tag">#必种草</span>
+          <span class="tag">#5组cos</span>
+        </div>
+        <span class="arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Card 2: 浮波柚叶 -->
+    <div class="char-card">
+      <div class="card-top">
+        <div class="thumbnail" style="background:linear-gradient(135deg,#1a2a3e,#1a2a2e);display:flex;align-items:center;justify-content:center;font-size:11px;color:#555;">
+          立绘
+          <span class="match-pct">87%</span>
+        </div>
+        <div class="info">
+          <div class="char-name">浮波柚叶</div>
+          <div class="char-title">绝区零 · 白祇重工</div>
+          <div class="match-bar-bg"><div class="match-bar-fill" style="width:87%"></div></div>
+          <div class="seed-line">
+            <span class="seed-icon">🍃</span>
+            <span>黑长直+和风浴衣，冷艳气质coser必备～人气角色，出片率超高！</span>
+          </div>
+        </div>
+      </div>
+      <div class="cos-strip">
+        <div style="width:48px;height:48px;border-radius:6px;background:linear-gradient(135deg,#1a2a3e,#2a1a2e);display:flex;align-items:center;justify-content:center;font-size:9px;color:#444;">cos1</div>
+        <div style="width:48px;height:48px;border-radius:6px;background:linear-gradient(135deg,#2a1a2e,#1a2a3e);display:flex;align-items:center;justify-content:center;font-size:9px;color:#444;">cos2</div>
+        <div style="width:48px;height:48px;border-radius:6px;background:linear-gradient(135deg,#1a2a3e,#3a2a2e);display:flex;align-items:center;justify-content:center;font-size:9px;color:#444;">cos3</div>
+        <div style="width:48px;height:48px;border-radius:6px;background:linear-gradient(135deg,#2a2a1e,#1a3a2e);display:flex;align-items:center;justify-content:center;font-size:9px;color:#444;">cos4</div>
+        <div class="more">+3</div>
+      </div>
+      <div class="card-cta">
+        <div class="tags">
+          <span class="tag">#人气角色</span>
+          <span class="tag">#和风cos</span>
+          <span class="tag">#7组cos</span>
+        </div>
+        <span class="arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Card 3: 爱丽丝 -->
+    <div class="char-card">
+      <div class="card-top">
+        <div class="thumbnail" style="background:linear-gradient(135deg,#2a1a3e,#1a2a3e);display:flex;align-items:center;justify-content:center;font-size:11px;color:#555;">
+          立绘
+          <span class="match-pct">81%</span>
+        </div>
+        <div class="info">
+          <div class="char-name">爱丽丝</div>
+          <div class="char-title">绝区零 · 白祇重工</div>
+          <div class="match-bar-bg"><div class="match-bar-fill" style="width:81%"></div></div>
+          <div class="seed-line">
+            <span class="seed-icon">🎀</span>
+            <span>双马尾+机械臂，反差萌拉满！萝莉体型的cos难度低，新手友好～</span>
+          </div>
+        </div>
+      </div>
+      <div class="cos-strip">
+        <div style="width:48px;height:48px;border-radius:6px;background:linear-gradient(135deg,#2a1a3e,#1a2a2e);display:flex;align-items:center;justify-content:center;font-size:9px;color:#444;">cos1</div>
+        <div style="width:48px;height:48px;border-radius:6px;background:linear-gradient(135deg,#1a1a2e,#3a2a3e);display:flex;align-items:center;justify-content:center;font-size:9px;color:#444;">cos2</div>
+        <div style="width:48px;height:48px;border-radius:6px;background:linear-gradient(135deg,#3a1a2e,#1a3a3e);display:flex;align-items:center;justify-content:center;font-size:9px;color:#444;">cos3</div>
+        <div style="width:48px;height:48px;border-radius:6px;background:linear-gradient(135deg,#1a3a2e,#2a1a1e);display:flex;align-items:center;justify-content:center;font-size:9px;color:#444;">cos4</div>
+        <div class="more">+4</div>
+      </div>
+      <div class="card-cta">
+        <div class="tags">
+          <span class="tag">#反差萌</span>
+          <span class="tag">#新手友好</span>
+          <span class="tag">#8组cos</span>
+        </div>
+        <span class="arrow">→</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-note">
+    <p>⬆ 点击角色卡片，展开查看原版立绘 + cos精选</p>
+  </div>
+
+</div>
+</body>
+</html>
