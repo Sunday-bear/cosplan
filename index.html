@@ -659,6 +659,12 @@ function diagnose() {
     
     // Face match narrative (using continuous score)
     const fwFhDiff2 = Math.abs(d.fwFh - (charTraits[c.name]?.fwFh || 0.80));
+    const fwFhScore2 = Math.max(0, 35 - fwFhDiff2 * 140);
+    const jawDiff2 = Math.abs(d.jawRatio - (charTraits[c.name]?.jawRatio || 0.85));
+    const jawScore2 = Math.max(0, 20 - jawDiff2 * 160);
+    const eyeDiff2 = Math.abs(d.eyeDist - (charTraits[c.name]?.eyeDist || 0.46));
+    const eyeScore2 = Math.max(0, 15 - eyeDiff2 * 200);
+    const faceScore = fwFhScore2 + jawScore2 + eyeScore2;
     if (fwFhDiff2 < 0.03) {
       parts.push(`你的${shapeNames[faceData.faceShape]}${shapeDescs[faceData.faceShape]}，${c.face===faceData.faceShape?'与'+c.name+'的脸型如出一辙':'与'+c.name+'的脸型相互辉映'}，轮廓上天然契合`);
     } else if (faceScore >= 10) {
