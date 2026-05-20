@@ -388,7 +388,7 @@ document.getElementById('btnAnalyze').addEventListener('click', async () => {
     // Plumpness estimate (placeholder - would need pixel analysis)
     const fullness = fwFh > 0.82 ? 'soft' : (fwFh < 0.75 ? 'slim' : 'average');
 
-    faceData = {faceShape, fwFh: fwFh.toFixed(2), jawRatio: jawRatio.toFixed(2), eyeDist: eyeDist.toFixed(2), fullness};
+    faceData = {faceShape, fwFh: parseFloat(fwFh.toFixed(3)), jawRatio: parseFloat(jawRatio.toFixed(3)), eyeDist: parseFloat(eyeDist.toFixed(3)), fullness, faceWidth, faceHeight};
 
     // Display results
     const shapeNames = {round:'圆脸',oval:'鹅蛋脸',square:'方脸',heart:'瓜子脸',long:'长脸'};
@@ -472,13 +472,67 @@ const characters = [
   {name:'甘雨',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',img:'233410',tags:['中式','蓝发','仙气']},
 ];
 
-// ═══════ MATCHING ═══════
-const faceCompatibility = {
-  round: {round:30,oval:15,square:5,heart:0,long:0},
-  oval: {round:15,oval:30,square:10,heart:12,long:8},
-  heart: {round:5,oval:15,square:0,heart:30,long:10},
-  square: {round:5,oval:10,square:30,heart:0,long:10},
-  long: {round:0,oval:10,square:10,heart:8,long:30},
+// ═══════ DYNAMIC MATCHING ENGINE ═══════
+// Each character gets continuous face trait targets + categorized face shape
+// Scoring uses continuous distance from user measurements → "alive" feel
+
+// Seed-based pseudo-random for reproducible but varied results
+function seededRandom(seed) {
+  let s = seed;
+  return function() { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646; };
+}
+
+// Face trait targets for each face shape (continuous values)
+const faceTraitMap = {
+  round:  { fwFh: 0.88, jawRatio: 0.90, eyeDist: 0.44 },
+  oval:   { fwFh: 0.78, jawRatio: 0.85, eyeDist: 0.46 },
+  heart:  { fwFh: 0.82, jawRatio: 0.80, eyeDist: 0.48 },
+  square: { fwFh: 0.86, jawRatio: 0.87, eyeDist: 0.45 },
+  long:   { fwFh: 0.70, jawRatio: 0.83, eyeDist: 0.45 },
+};
+
+// Extended character traits for continuous scoring
+const charTraits = {
+  '蕾姆': { fwFh:0.88, jawRatio:0.90, eyeDist:0.45 },
+  '血小板': { fwFh:0.90, jawRatio:0.92, eyeDist:0.48 },
+  '甘露寺蜜璃': { fwFh:0.80, jawRatio:0.84, eyeDist:0.47 },
+  '时崎狂三': { fwFh:0.78, jawRatio:0.84, eyeDist:0.46 },
+  '02': { fwFh:0.76, jawRatio:0.82, eyeDist:0.46 },
+  '薇尔莉特': { fwFh:0.77, jawRatio:0.84, eyeDist:0.45 },
+  '蝴蝶忍': { fwFh:0.79, jawRatio:0.83, eyeDist:0.46 },
+  '亚丝娜': { fwFh:0.78, jawRatio:0.84, eyeDist:0.46 },
+  'Saber': { fwFh:0.77, jawRatio:0.84, eyeDist:0.45 },
+  '艾米莉亚': { fwFh:0.78, jawRatio:0.83, eyeDist:0.45 },
+  '五更琉璃': { fwFh:0.85, jawRatio:0.88, eyeDist:0.47 },
+  '三笠·阿克曼': { fwFh:0.76, jawRatio:0.82, eyeDist:0.44 },
+  '八重神子': { fwFh:0.79, jawRatio:0.83, eyeDist:0.46 },
+  '雷电将军': { fwFh:0.80, jawRatio:0.84, eyeDist:0.45 },
+  '康娜': { fwFh:0.92, jawRatio:0.94, eyeDist:0.49 },
+  '托尔': { fwFh:0.80, jawRatio:0.85, eyeDist:0.46 },
+  '五条悟': { fwFh:0.77, jawRatio:0.83, eyeDist:0.44 },
+  '炭治郎': { fwFh:0.80, jawRatio:0.85, eyeDist:0.46 },
+  '利威尔': { fwFh:0.75, jawRatio:0.81, eyeDist:0.44 },
+  '太宰治': { fwFh:0.77, jawRatio:0.83, eyeDist:0.45 },
+  '宇智波佐助': { fwFh:0.78, jawRatio:0.83, eyeDist:0.45 },
+  '漩涡鸣人': { fwFh:0.81, jawRatio:0.86, eyeDist:0.47 },
+  '杀生丸': { fwFh:0.72, jawRatio:0.82, eyeDist:0.43 },
+  '中原中也': { fwFh:0.80, jawRatio:0.84, eyeDist:0.46 },
+  '钟离': { fwFh:0.77, jawRatio:0.83, eyeDist:0.44 },
+  '灶门祢豆子': { fwFh:0.86, jawRatio:0.88, eyeDist:0.48 },
+  '胡桃': { fwFh:0.82, jawRatio:0.85, eyeDist:0.47 },
+  '刻晴': { fwFh:0.78, jawRatio:0.83, eyeDist:0.46 },
+  '魈': { fwFh:0.75, jawRatio:0.81, eyeDist:0.44 },
+  '木之本樱': { fwFh:0.87, jawRatio:0.89, eyeDist:0.48 },
+  '阿尼亚': { fwFh:0.94, jawRatio:0.93, eyeDist:0.50 },
+  '约尔': { fwFh:0.78, jawRatio:0.83, eyeDist:0.45 },
+  '黄昏': { fwFh:0.80, jawRatio:0.86, eyeDist:0.44 },
+  '楪祈': { fwFh:0.79, jawRatio:0.83, eyeDist:0.46 },
+  '艾伦·耶格尔': { fwFh:0.78, jawRatio:0.84, eyeDist:0.45 },
+  '金木研': { fwFh:0.77, jawRatio:0.83, eyeDist:0.45 },
+  '达达利亚': { fwFh:0.79, jawRatio:0.84, eyeDist:0.45 },
+  '甘雨': { fwFh:0.78, jawRatio:0.83, eyeDist:0.45 },
+  '纳西妲': { fwFh:0.88, jawRatio:0.89, eyeDist:0.48 },
+  '散兵': { fwFh:0.77, jawRatio:0.82, eyeDist:0.45 },
 };
 
 // ═══════ SERIES COLOR PALETTE ═══════
@@ -496,44 +550,73 @@ const defaultColor = '124,58,237';
 function diagnose() {
   if (!faceData) return;
   const d = faceData;
+  
+  // Generate a session-unique seed for controlled randomness
+  const sessionSeed = Date.now() % 1000000 + Math.floor(Math.random() * 500000);
+  const rand = seededRandom(sessionSeed);
+  
   const results = characters.map(char => {
     let score = 0, reasons = [];
 
     // Gender
     if (selected.gender && selected.gender !== 'any') {
-      if (char.gender === selected.gender) { score += 25; reasons.push('性别匹配'); }
+      if (char.gender === selected.gender) { score += 20; reasons.push('性别匹配'); }
       else { score -= 100; return {char,score,reasons}; }
     }
 
-    // Face shape (most important)
-    const faceScore = faceCompatibility[d.faceShape]?.[char.face] || 0;
-    score += faceScore;
-    if (faceScore >= 25) reasons.push('脸型高度匹配');
-    else if (faceScore >= 10) reasons.push('脸型兼容');
+    // === CONTINUOUS FACE SCORING (the "alive" engine) ===
+    const ct = charTraits[char.name] || { fwFh:0.80, jawRatio:0.85, eyeDist:0.46 };
+    
+    // Face width/height ratio (most important)
+    const fwFhDiff = Math.abs(d.fwFh - ct.fwFh);
+    const fwFhScore = Math.max(0, 35 - fwFhDiff * 140); // perfect match = 35, 0.25 diff = 0
+    score += fwFhScore;
+    if (fwFhDiff < 0.03) reasons.push('脸型比例高度匹配');
+    else if (fwFhDiff < 0.07) reasons.push('脸型接近');
+
+    // Jaw ratio
+    const jawDiff = Math.abs(d.jawRatio - ct.jawRatio);
+    const jawScore = Math.max(0, 20 - jawDiff * 160);
+    score += jawScore;
+    if (jawDiff < 0.03) reasons.push('下颌轮廓完美契合');
+
+    // Eye distance
+    const eyeDiff = Math.abs(d.eyeDist - ct.eyeDist);
+    const eyeScore = Math.max(0, 15 - eyeDiff * 200);
+    score += eyeScore;
+    if (eyeDiff < 0.02) reasons.push('眼距天然相似');
+
+    // === RANDOMNESS FACTOR (the "alive" magic) ===
+    // Each diagnosis session gets ±12% jitter on face scores
+    const jitter = (rand() - 0.5) * 0.24; // -12% to +12%
+    score = score * (1 + jitter);
+
+    // Also add subtle categorical face shape bonus
+    const faceBonus = (d.faceShape === char.face) ? 8 : 
+      ((d.faceShape==='round'&&char.face==='oval')||(d.faceShape==='oval'&&char.face==='round')) ? 5 :
+      ((d.faceShape==='heart'&&char.face==='oval')||(d.faceShape==='oval'&&char.face==='heart')) ? 4 : 0;
+    score += faceBonus;
+    if (faceBonus >= 8) reasons.push('脸型类别完美吻合');
 
     // Height
-    if (char.height === selected.height) { score += 20; reasons.push('身高完美匹配'); }
+    if (char.height === selected.height) { score += 18; reasons.push('身高完美匹配'); }
     else {
       const hOrder = ['short','mid-low','mid','mid-high','tall'];
       const diff = Math.abs(hOrder.indexOf(char.height) - hOrder.indexOf(selected.height));
-      if (diff === 1) { score += 12; reasons.push('身高接近'); }
+      if (diff === 1) { score += 10; reasons.push('身高接近'); }
       else if (diff === 2) score += 4;
     }
 
     // Build
     if (selected.build) {
-      if (char.build === selected.build) { score += 15; reasons.push('体型契合'); }
-      else if (char.build === 'average' && (selected.build==='slim'||selected.build==='soft')) { score += 8; }
-      else if (char.build === 'slim' && selected.build==='average') { score += 8; }
+      if (char.build === selected.build) { score += 12; reasons.push('体型契合'); }
+      else if (char.build === 'average' && (selected.build==='slim'||selected.build==='soft')) { score += 6; }
+      else if (char.build === 'slim' && selected.build==='average') { score += 6; }
     }
-
-    // Facial fullness
-    if (d.fullness === 'soft' && char.face === 'round') { score += 8; reasons.push('面部饱满度匹配'); }
-    if (d.fullness === 'slim' && char.face === 'heart') { score += 6; }
 
     // Budget
     if (selected.budget && selected.budget !== 'any') {
-      if (char.cost === selected.budget) { score += 8; reasons.push('预算匹配'); }
+      if (char.cost === selected.budget) { score += 6; reasons.push('预算匹配'); }
     }
 
     return {char,score,reasons};
@@ -555,7 +638,7 @@ function diagnose() {
   const resultsWithNarratives = results.map((r,i) => {
     const c = r.char;
     const maxScore = 100;
-    const matchPct = Math.min(99, Math.round(r.score / maxScore * 100));
+    const matchPct = Math.min(99, Math.round(r.score / maxScore * 95 + rand() * 4)); // tiny natural variation
     
     // Generate exciting matching story
     const parts = [];
