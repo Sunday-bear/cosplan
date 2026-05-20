@@ -753,7 +753,7 @@ async function loadDynamicCosplay(idx) {
   const imgEl = document.getElementById(`char-img-${idx}`);
   if (!imgEl || !char) return;
   
-  // First try local cached cosplay images
+  // Try local cached cosplay images first
   const keyMap = {
     '蕾姆':'rem','血小板':'platelet','甘露寺蜜璃':'kanroji_mitsuri','时崎狂三':'kurumi',
     '02':'zero_two','薇尔莉特':'violet','蝴蝶忍':'shinobu','亚丝娜':'asuna',
@@ -767,7 +767,6 @@ async function loadDynamicCosplay(idx) {
   };
   const key = keyMap[char.name] || char.name.replace(/[·\s]/g, '').toLowerCase();
   
-  // Try loading up to 3 local cosplay images
   let loaded = false;
   for (let ci = 1; ci <= 3; ci++) {
     const cosUrl = `chars/${key}/cos_0${ci}.jpg`;
@@ -775,7 +774,7 @@ async function loadDynamicCosplay(idx) {
       const resp = await fetch(cosUrl, { signal: AbortSignal.timeout(3000) });
       if (resp.ok) {
         const blob = await resp.blob();
-        if (blob.size > 1000) { // actual image, not empty
+        if (blob.size > 1000) {
           imgEl.src = URL.createObjectURL(blob);
           imgEl.style.display = 'block';
           const fb = document.getElementById(`char-img-${idx}-fb`);
@@ -787,26 +786,34 @@ async function loadDynamicCosplay(idx) {
     } catch(e) {}
   }
   
-  // Fallback: try Bilibili API
+  // Fallback: search weibo API via CORS proxy (real cosplay photos)
   if (!loaded) {
     try {
-      const keyword = `${char.series} ${char.name} cosplay`;
-      const apiUrl = `https://api.bilibili.com/x/web-interface/search/type?search_type=photo&keyword=${encodeURIComponent(keyword)}&page=1`;
-      const resp = await fetch(apiUrl, { signal: AbortSignal.timeout(5000) });
+      const keyword = char.series ? `${char.series} ${char.name} cos` : `${char.name} cosplay`;
+      const wbUrl = `https://m.weibo.cn/api/container/getIndex?containerid=100103type%3D1%26q%3D${encodeURIComponent(keyword)}&page=1`;
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(wbUrl)}`;
+      
+      const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
       if (resp.ok) {
         const data = await resp.json();
-        const results = data?.data?.result || [];
-        if (results.length > 0) {
-          const newImg = results[0]?.cover || results[0]?.pic;
-          if (newImg) {
-            imgEl.src = newImg.replace('http://', 'https://');
-            imgEl.style.display = 'block';
-            const fb = document.getElementById(`char-img-${idx}-fb`);
-            if (fb) fb.style.display = 'none';
+        const cards = data?.data?.cards || [];
+        for (const card of cards) {
+          const pics = card?.mblog?.pics || card?.mblog?.retweeted_status?.pics || [];
+          for (const pic of pics) {
+            const imgUrl = pic.large?.url || pic.url;
+            if (imgUrl) {
+              imgEl.src = 'https:' + imgUrl;
+              imgEl.style.display = 'block';
+              const fb = document.getElementById(`char-img-${idx}-fb`);
+              if (fb) fb.style.display = 'none';
+              loaded = true;
+              break;
+            }
           }
+          if (loaded) break;
         }
       }
-    } catch(e) {}
+    } catch(e) { console.log('weibo search failed:', e.message); }
   }
 }
 
