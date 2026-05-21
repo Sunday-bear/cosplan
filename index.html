@@ -659,6 +659,12 @@ function diagnose() {
     
     // Face match narrative (using continuous score)
     const fwFhDiff2 = Math.abs(d.fwFh - (charTraits[c.name]?.fwFh || 0.80));
+    const fwFhScore2 = Math.max(0, 35 - fwFhDiff2 * 140);
+    const jawDiff2 = Math.abs(d.jawRatio - (charTraits[c.name]?.jawRatio || 0.85));
+    const jawScore2 = Math.max(0, 20 - jawDiff2 * 160);
+    const eyeDiff2 = Math.abs(d.eyeDist - (charTraits[c.name]?.eyeDist || 0.46));
+    const eyeScore2 = Math.max(0, 15 - eyeDiff2 * 200);
+    const faceScore = fwFhScore2 + jawScore2 + eyeScore2;
     if (fwFhDiff2 < 0.03) {
       parts.push(`你的${shapeNames[faceData.faceShape]}${shapeDescs[faceData.faceShape]}，${c.face===faceData.faceShape?'与'+c.name+'的脸型如出一辙':'与'+c.name+'的脸型相互辉映'}，轮廓上天然契合`);
     } else if (faceScore >= 10) {
@@ -706,8 +712,8 @@ function diagnose() {
     const c = r.char; 
     // Use cosplay image if available, fallback to AniList CDN
     const safeKey = charKeyMap[c.name] || c.name.replace(/[·\s]/g, '').toLowerCase();
-    const cosImg = `chars/${safeKey}/cos_01.jpg`;
-    const aniImg = c.img ? `images/characters/${c.img}.jpg` : '';
+    // Start with AniList static art, then loadDynamicCosplay replaces with real cosplay photos
+    const initialImg = c.img ? `images/characters/${c.img}.jpg` : '';
     const sc = seriesColors[c.series] || defaultColor;
     const charId = `char-img-${i}`;
     
@@ -720,7 +726,7 @@ function diagnose() {
       <div class="char-card${r.isLocked?' premium':''}">
         <div class="char-rank">#${i+1}</div>
         <div class="char-img-wrap" style="background:radial-gradient(ellipse at 30% 20%,rgba(${sc},0.2),transparent 70%),linear-gradient(135deg,rgba(${sc},0.12),rgba(0,0,0,0.3))">
-          <img class="char-img" id="${charId}" src="${cosImg}" alt="${c.name}" loading="lazy" onerror="this.onerror=null;this.src='${aniImg}';if(!this.src||this.src===window.location.href){this.style.display='none';document.getElementById('${charId}-fb').style.display='flex'}">
+          <img class="char-img" id="${charId}" src="${initialImg}" alt="${c.name}" loading="lazy" onerror="this.onerror=null;this.style.display='none';document.getElementById('${charId}-fb').style.display='flex'">
           <div class="char-img-fallback" style="display:none" id="${charId}-fb">
             <span class="char-img-initial">${c.name}</span>
             <span class="char-img-label">${c.series}</span>
@@ -769,63 +775,58 @@ function diagnose() {
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+// Worker API base URL — Cosplan Image Worker
+const apiBase = 'https://cosplan-api.15913625621.workers.dev';
+
 async function loadDynamicCosplay(idx) {
   const char = window._charData?.[idx];
   const imgEl = document.getElementById(`char-img-${idx}`);
   if (!imgEl || !char) return;
   
-  // Try local cached cosplay images first
-  const keyMap = {
-    '蕾姆':'rem','血小板':'platelet','甘露寺蜜璃':'kanroji_mitsuri','时崎狂三':'kurumi',
-    '02':'zero_two','薇尔莉特':'violet','蝴蝶忍':'shinobu','亚丝娜':'asuna',
-    'Saber':'saber','艾米莉亚':'emilia','五更琉璃':'kuroneko','三笠·阿克曼':'mikasa',
-    '八重神子':'yae_miko','雷电将军':'raiden','康娜':'kanna','托尔':'tohru',
-    '五条悟':'gojo','炭治郎':'tanjiro','利威尔':'levi','太宰治':'dazai',
-    '杀生丸':'sesshomaru','中原中也':'chuuya','钟离':'zhongli','灶门祢豆子':'nezuko',
-    '胡桃':'hutao','刻晴':'keqing','魈':'xiao','木之本樱':'sakura',
-    '阿尼亚':'anya','约尔':'yor','黄昏':'loid','楪祈':'inori',
-    '艾伦·耶格尔':'eren','金木研':'kaneki','达达利亚':'tartaglia','甘雨':'ganyu',
-  };
-  const key = keyMap[char.name] || char.name.replace(/[·\s]/g, '').toLowerCase();
+  // Build search keyword: series + name + cos
+  const keyword = `${char.series || ''} ${char.name} コスプレ cos`.trim();
+  const card = imgEl.closest('.char-card');
+  if (!card) return;
   
-  let loaded = false;
-  for (let ci = 1; ci <= 3; ci++) {
-    const cosUrl = `chars/${key}/cos_0${ci}.jpg`;
-    try {
-      const resp = await fetch(cosUrl, { signal: AbortSignal.timeout(3000) });
-      if (resp.ok) {
-        const blob = await resp.blob();
-        if (blob.size > 1000) {
-          imgEl.src = URL.createObjectURL(blob);
-          imgEl.style.display = 'block';
-          const fb = document.getElementById(`char-img-${idx}-fb`);
-          if (fb) fb.style.display = 'none';
-          loaded = true;
-          break;
-        }
-      }
-    } catch(e) {}
-  }
-  
-  // Fallback: call our own API (api.cosplan.top → Cloudflare Worker → weibo search)
-  if (!loaded) {
-    try {
-      const keyword = char.series ? `${char.series} ${char.name}` : char.name;
-      const apiUrl = `https://cosplan-api.15913625621.workers.dev/search?q=${encodeURIComponent(keyword)}`;
+  try {
+    // Call our Worker API to search & proxy cosplay images
+    // Worker does: search sogou/baidu/weibo → return image URLs
+    // Frontend then loads via /proxy to avoid hotlinking
+    const searchUrl = `${apiBase}/search?q=${encodeURIComponent(keyword)}&source=all`;
+    const resp = await fetch(searchUrl, { signal: AbortSignal.timeout(8000) });
+    
+    if (!resp.ok) return;
+    
+    const data = await resp.json();
+    const images = data?.images || [];
+    if (images.length === 0) return;
+    
+    // Create proxy URLs to bypass hotlink protection
+    const proxyImg = `${apiBase}/proxy?url=${encodeURIComponent(images[0])}`;
+    
+    // Test-load the image through proxy; if valid, replace the current image
+    const testImg = new Image();
+    testImg.onload = () => {
+      if (testImg.width < 50 && testImg.height < 50) return; // tiny = bad image
+      imgEl.src = proxyImg;
+      imgEl.style.display = 'block';
+      const fb = document.getElementById(`char-img-${idx}-fb`);
+      if (fb) fb.style.display = 'none';
       
-      const resp = await fetch(apiUrl, { signal: AbortSignal.timeout(10000) });
-      if (resp.ok) {
-        const data = await resp.json();
-        const images = data?.images || [];
-        if (images.length > 0) {
-          imgEl.src = images[0];
-          imgEl.style.display = 'block';
-          const fb = document.getElementById(`char-img-${idx}-fb`);
-          if (fb) fb.style.display = 'none';
-          loaded = true;
-        }
+      // Add a '真人Cos' badge to show this is a real cosplay photo
+      const nameEl = card.querySelector('.char-name');
+      if (nameEl && !nameEl.querySelector('.cos-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'char-tag pink cos-badge';
+        badge.textContent = '📸 真人Cos';
+        badge.style.cssText = 'font-size:10px;margin-left:6px;vertical-align:middle';
+        nameEl.appendChild(badge);
       }
-    } catch(e) { console.log('API search failed:', e.message); }
+    };
+    testImg.onerror = () => {}; // silent fail, keep static art
+    testImg.src = proxyImg;
+  } catch(e) {
+    // Silent fail — keep showing AniList static art
   }
 }
 
