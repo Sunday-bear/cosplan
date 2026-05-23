@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cosplan · 角色快诊</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js" onerror="var s=this;s.onerror=null;s.src='https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js';s.addEventListener('error',function(){var l=document.createElement('script');l.src='face-api.min.js';document.head.appendChild(l)})
+  <style>
+    :root {
+      --pink:#ff6b9d;--purple:#7c3aed;--bg:#0d0614;--card:rgba(255,255,255,0.06);
+      --text:#fff;--sub:rgba(255,255,255,0.5);--radius:18px;--radius-sm:12px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+      background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;
+      -webkit-font-smoothing:antialiased;display:flex;justify-content:center;
+    }
+    .app{width:100%;max-width:480px;padding:0 16px 80px;position:relative;z-index:1}
+    .header{text-align:center;padding:40px 0 20px}
+    .logo{font-size:40px}
+    .title{font-size:26px;font-weight:800;margin:6px 0 4px;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .subtitle{font-size:13px;color:var(--sub)}
+    .subtitle span{color:#ff9ec4;font-weight:600}
+    .view{display:none}
+    .view.active{display:block}
+
+    /* Photo capture */
+    .capture-box{
+      background:var(--card);border:2px dashed rgba(255,255,255,0.15);
+      border-radius:var(--radius);padding:32px 20px;text-align:center;
+      cursor:pointer;transition:all 0.2s;margin-bottom:16px;-webkit-tap-highlight-color:transparent;
+      min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    }
+    .capture-box:active{border-color:var(--pink);background:rgba(255,107,157,0.08)}
+    .capture-box.has-photo{border-style:solid;border-color:rgba(255,107,157,0.3);padding:8px}
+    .capture-icon{font-size:48px;margin-bottom:8px}
+    .capture-text{font-size:15px;font-weight:600;color:rgba(255,255,255,0.7)}
+    .capture-hint{font-size:12px;color:var(--sub);margin-top:4px}
+    .capture-box video,.capture-box canvas{width:100%;max-height:300px;border-radius:var(--radius-sm);display:none}
+    .capture-box.has-photo video{display:none}
+    .capture-box.has-photo canvas{display:block}
+    .capture-box.has-photo .capture-icon,.capture-box.has-photo .capture-text,.capture-box.has-photo .capture-hint{display:none}
+    .capture-actions{display:flex;gap:8px;margin-top:10px}
+    .btn-sm{
+      padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;
+      border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);
+      color:rgba(255,255,255,0.7);transition:all 0.15s;-webkit-tap-highlight-color:transparent;
+    }
+    .btn-sm:active{background:rgba(255,107,157,0.15);border-color:var(--pink)}
+    .btn-sm.primary{background:var(--pink);border-color:var(--pink);color:#fff}
+    .btn-sm.primary:active{opacity:0.8}
+
+    /* Analysis */
+    .analysis-box{
+      background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);
+      border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:16px;display:none;
+    }
+    .analysis-box.show{display:block}
+    .analysis-title{font-size:12px;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+    .analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .analysis-item{font-size:13px;color:var(--text)}
+    .analysis-item .val{color:#34d399;font-weight:700}
+
+    .form-section{margin-bottom:16px}
+    .form-label{font-size:14px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .chip-row{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{
+      padding:10px 18px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;
+      border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);
+      color:rgba(255,255,255,0.55);transition:all 0.15s;-webkit-tap-highlight-color:transparent;user-select:none;
+    }
+    .chip.active{background:rgba(255,107,157,0.18);border-color:var(--pink);color:#ff9ec4}
+    .chip:active{transform:scale(0.96)}
+
+    .btn-primary{
+      width:100%;height:54px;background:linear-gradient(135deg,var(--pink),var(--purple));
+      color:#fff;border:none;border-radius:var(--radius-sm);font-size:17px;font-weight:700;
+      cursor:pointer;letter-spacing:1px;margin-top:16px;transition:all 0.15s;
+    }
+    .btn-primary:active{transform:scale(0.97);opacity:0.9}
+    .btn-primary:disabled{opacity:0.35;transform:none;cursor:not-allowed}
+
+    /* Result */
+    .result-header{text-align:center;padding:16px 0}
+    .result-header .match-count{font-size:42px;font-weight:800;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .result-header .match-sub{font-size:13px;color:var(--sub)}
+    .char-card{
+      background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:18px;
+      margin-bottom:12px;position:relative;overflow:hidden;
+    }
+    .char-card.premium{opacity:0.45;filter:blur(5px);pointer-events:none}
+    .char-rank{position:absolute;top:0;right:16px;font-size:56px;font-weight:800;color:rgba(255,255,255,0.025);line-height:1;pointer-events:none}
+    .char-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+    .char-avatar{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;background:rgba(255,107,157,0.12)}
+    .char-info{flex:1}
+    .char-name{font-size:18px;font-weight:700}
+    .char-series{font-size:12px;color:var(--sub)}
+    .char-match{font-size:15px;font-weight:800;color:#ff9ec4;background:rgba(255,107,157,0.12);padding:4px 12px;border-radius:10px}
+    .char-why{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px;background:rgba(255,255,255,0.03);padding:10px 12px;border-radius:var(--radius-sm)}
+    .char-why strong{color:rgba(255,255,255,0.7)}
+    .char-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+    .char-tag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:10px;background:rgba(124,58,237,0.1);color:#a78bfa}
+    .char-tag.pink{background:rgba(255,107,157,0.1);color:#ff9ec4}
+    .char-tag.green{background:rgba(16,185,129,0.1);color:#34d399}
+    .char-cost{display:flex;gap:16px;font-size:13px;color:var(--sub)}
+
+    .lock-banner{
+      text-align:center;padding:32px 16px;margin:20px 0;
+      background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.15);border-radius:var(--radius);
+    }
+    .lock-banner .lock-icon{font-size:36px;margin-bottom:8px}
+    .lock-banner .lock-title{font-size:16px;font-weight:700;margin-bottom:6px}
+    .lock-banner .lock-desc{font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:14px}
+    .btn-unlock{
+      display:inline-flex;align-items:center;gap:6px;padding:12px 28px;
+      background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;
+      border:none;border-radius:24px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:1px;
+    }
+    .btn-unlock:active{transform:scale(0.96)}
+
+    .back-btn{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--sub);cursor:pointer;margin-bottom:16px;padding:4px 0;-webkit-tap-highlight-color:transparent}
+    .toast{position:fixed;top:50px;left:50%;transform:translateX(-50%);z-index:200;background:var(--purple);color:#fff;padding:10px 24px;border-radius:30px;font-size:14px;font-weight:600;opacity:0;transition:opacity 0.3s;pointer-events:none}
+    .toast.show{opacity:1}
+    .footer{text-align:center;padding:24px 0;color:rgba(255,255,255,0.15);font-size:12px}
+    .bg-decor{position:fixed;top:-120px;right:-120px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,157,0.05),transparent 70%);pointer-events:none;z-index:0}
+    .bg-decor2{position:fixed;bottom:-100px;left:-100px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,0.05),transparent 70%);pointer-events:none;z-index:0}
+
+    .loading-overlay{
+      position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,6,20,0.9);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;
+    }
+    .loading-overlay.hidden{display:none}
+    .spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--pink);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:16px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-text{font-size:14px;color:var(--sub)}
+  </style>
+</head>
+<body>
+<div class="bg-decor"></div><div class="bg-decor2"></div>
+<div class="loading-overlay hidden" id="loadingOverlay"><div class="spinner"></div><div class="loading-text" id="loadingText">加载中...</div></div>
+
+<div class="app">
+  <div class="view active" id="homeView">
+    <header class="header">
+      <div class="logo">🔮</div>
+      <div class="title">角色快诊</div>
+      <p class="subtitle">自拍一张，找到天生适合你的角色 · <span>告别OOC焦虑</span></p>
+    </header>
+
+    <div class="form-label">📷 拍一张正面照</div>
+    <div class="capture-box" id="captureBox">
+      <span class="capture-icon">🤳</span>
+      <div class="capture-text">点击拍照或选照片</div>
+      <div class="capture-hint">正面、自然光、不戴墨镜和口罩</div>
+      <video id="captureVideo" autoplay playsinline></video>
+      <canvas id="captureCanvas"></canvas>
+    </div>
+    <div class="capture-actions" id="captureActions" style="display:none;">
+      <button class="btn-sm" id="btnRetake">🔄 重拍</button>
+      <button class="btn-sm primary" id="btnAnalyze">🔍 分析脸型</button>
+    </div>
+    <input type="file" accept="image/*" id="fileInput" style="display:none">
+    <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none">
+
+    <div class="analysis-box" id="analysisBox">
+      <div class="analysis-title">🤖 AI 面部分析结果</div>
+      <div class="analysis-grid" id="analysisGrid"></div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-label">📏 身高范围</div>
+      <div class="chip-row" id="heightRow"></div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-label">🏃 体型</div>
+      <div class="chip-row" id="buildRow"></div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-label">🎭 想出的性别</div>
+      <div class="chip-row" id="genderRow"></div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-label">💰 预算</div>
+      <div class="chip-row" id="budgetRow"></div>
+    </div>
+
+    <button class="btn-primary" id="btnDiagnose" disabled>🔮 开始诊断</button>
+    <div class="footer">Cosplan · cosplan.top</div>
+  </div>
+
+  <div class="view" id="resultView">
+    <div class="back-btn" onclick="goHome()">← 重新诊断</div>
+    <div class="result-header">
+      <div class="match-sub">你的专属匹配</div>
+      <div class="match-count" id="matchCount">0</div>
+      <div class="match-sub">个角色天生适合你</div>
+    </div>
+    <div id="resultList"></div>
+    <div class="footer">Cosplan · cosplan.top</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════ STATE ═══════
+let faceData = null;
+let selected = {height:null,build:null,gender:null,budget:null};
+
+const options = {
+  height:[
+    {v:'short',label:'155cm以下'},{v:'mid-low',label:'155-165cm'},{v:'mid',label:'165-175cm'},
+    {v:'mid-high',label:'175-185cm'},{v:'tall',label:'185cm以上'},
+  ],
+  build:[
+    {v:'slim',label:'偏瘦'},{v:'average',label:'标准'},{v:'athletic',label:'有肌肉'},{v:'soft',label:'偏圆润'},
+  ],
+  gender:[
+    {v:'female',label:'女性角色'},{v:'male',label:'男性角色'},{v:'any',label:'不限'},
+  ],
+  budget:[
+    {v:'low',label:'500以内'},{v:'mid',label:'500-2000'},{v:'high',label:'2000+'},{v:'any',label:'不限'},
+  ],
+};
+
+// ═══════ MODELS ═══════
+const MODEL_URL = 'models';
+let modelsLoaded = false;
+
+async function loadModels() {
+  if (modelsLoaded) return;
+  showLoading('加载 AI 模型...');
+  try {
+    // Wait for face-api to be available (CDN may be slow in China)
+    let waited = 0;
+    while (typeof faceapi === 'undefined' || !faceapi.nets) {
+      if (waited > 30) throw new Error('face-api.js CDN 超时');
+      await new Promise(r => setTimeout(r, 1000));
+      waited++;
+    }
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    modelsLoaded = true;
+  } catch(e) {
+    console.error('Model load error:', e);
+    const msg = e.message && e.message.includes('CDN') ? '⚠️ CDN加载超时，请检查网络后刷新' : '⚠️ 模型加载失败，请刷新重试';
+    showToast(msg);
+  }
+  hideLoading();
+}
+
+// ═══════ PHOTO CAPTURE ═══════
+const captureBox = document.getElementById('captureBox');
+const captureVideo = document.getElementById('captureVideo');
+const captureCanvas = document.getElementById('captureCanvas');
+const captureActions = document.getElementById('captureActions');
+
+captureBox.addEventListener('click', () => {
+  const inp = document.getElementById('fileInput');
+  inp.value = ''; inp.click();
+});
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files[0]) loadImageFile(e.target.files[0]);
+});
+
+document.getElementById('btnRetake').addEventListener('click', () => {
+  faceData = null;
+  captureCanvas.style.display = 'none';
+  captureVideo.style.display = 'none';
+  captureBox.classList.remove('has-photo');
+  captureActions.style.display = 'none';
+  document.getElementById('analysisBox').classList.remove('show');
+  updateBtn();
+});
+
+function loadImageFile(file) {
+  // Use native Image API (not faceapi) to avoid CDN dependency for preview
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    displayCapturedImage(img);
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
+}
+
+function displayCapturedImage(img) {
+  const maxW = captureBox.clientWidth - 16;
+  const maxH = 300;
+  let w = img.width, h = img.height;
+  if (w > maxW) { h = h * maxW / w; w = maxW; }
+  if (h > maxH) { w = w * maxH / h; h = maxH; }
+  captureCanvas.width = w; captureCanvas.height = h;
+  const ctx = captureCanvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  captureCanvas.style.display = 'block';
+  captureVideo.style.display = 'none';
+  captureBox.classList.add('has-photo');
+  captureActions.style.display = 'flex';
+}
+
+// ═══════ FACE ANALYSIS ═══════
+document.getElementById('btnAnalyze').addEventListener('click', async () => {
+  await loadModels();
+  if (!modelsLoaded) return; // loadModels showed error toast already
+  showLoading('分析面部特征...');
+  try {
+    const detection = await faceapi.detectSingleFace(captureCanvas, new faceapi.TinyFaceDetectorOptions({inputSize:320})).withFaceLandmarks();
+    if (!detection) {
+      showToast('😕 未检测到人脸，请拍一张清晰的正面照');
+      hideLoading();
+      return;
+    }
+    const lm = detection.landmarks;
+    const jaw = lm.getJawOutline();
+    const leftCheek = lm.getLeftEyeBrow()[0];
+    const rightCheek = lm.getRightEyeBrow()[0];
+    const chin = jaw[8]; // chin tip
+    const forehead = {x: (lm.getLeftEyeBrow()[2].x + lm.getRightEyeBrow()[2].x)/2, y: Math.min(lm.getLeftEyeBrow()[0].y, lm.getRightEyeBrow()[0].y)};
+
+    // Calculate metrics
+    const faceWidth = Math.abs(rightCheek.x - leftCheek.x);
+    const faceHeight = Math.abs(chin.y - forehead.y);
+    const fwFh = faceWidth / faceHeight; // face width/height ratio
+
+    // Jaw width at ~60% down from forehead
+    const jawLevel = forehead.y + faceHeight * 0.6;
+    const jawLeft = jaw.find(p => Math.abs(p.y - jawLevel) < 10);
+    const jawRight = [...jaw].reverse().find(p => Math.abs(p.y - jawLevel) < 10);
+    let jawWidth = faceWidth;
+    if (jawLeft && jawRight) jawWidth = Math.abs(jawRight.x - jawLeft.x);
+    const jawRatio = jawWidth / faceWidth; // jaw/cheekbone ratio
+
+    // Eye distance
+    const leftEye = lm.getLeftEye();
+    const rightEye = lm.getRightEye();
+    const leftEyeC = {x: (leftEye[0].x+leftEye[3].x)/2, y: (leftEye[1].y+leftEye[4].y)/2};
+    const rightEyeC = {x: (rightEye[0].x+rightEye[3].x)/2, y: (rightEye[1].y+rightEye[4].y)/2};
+    const eyeDist = Math.abs(rightEyeC.x - leftEyeC.x) / faceWidth;
+
+    // Determine face shape
+    let faceShape = 'oval';
+    if (fwFh > 0.85 && jawRatio > 0.85) faceShape = 'round';
+    else if (fwFh > 0.85 && jawRatio <= 0.85) faceShape = 'square';
+    else if (fwFh <= 0.85 && jawRatio <= 0.82) faceShape = 'heart';
+    else if (fwFh <= 0.72) faceShape = 'long';
+    else faceShape = 'oval';
+
+    // Plumpness estimate (placeholder - would need pixel analysis)
+    const fullness = fwFh > 0.82 ? 'soft' : (fwFh < 0.75 ? 'slim' : 'average');
+
+    faceData = {faceShape, fwFh: fwFh.toFixed(2), jawRatio: jawRatio.toFixed(2), eyeDist: eyeDist.toFixed(2), fullness};
+
+    // Display results
+    const shapeNames = {round:'圆脸',oval:'鹅蛋脸',square:'方脸',heart:'瓜子脸',long:'长脸'};
+    const grid = document.getElementById('analysisGrid');
+    grid.innerHTML = `
+      <div class="analysis-item">脸型 <span class="val">${shapeNames[faceShape]}</span></div>
+      <div class="analysis-item">宽高比 <span class="val">${fwFh.toFixed(2)}</span></div>
+      <div class="analysis-item">下颌比 <span class="val">${jawRatio.toFixed(2)}</span></div>
+      <div class="analysis-item">饱满度 <span class="val">${fullness==='soft'?'偏圆润':fullness==='slim'?'偏瘦':'标准'}</span></div>
+    `;
+    document.getElementById('analysisBox').classList.add('show');
+    updateBtn();
+    showToast('✅ 分析完成！选好身高体型开始诊断吧');
+  } catch (e) {
+    console.error(e);
+    showToast('😕 分析出错，请重试');
+  }
+  hideLoading();
+});
+
+// ═══════ FORM CHIPS ═══════
+['height','build','gender','budget'].forEach(k => {
+  const row = document.getElementById(k+'Row');
+  row.innerHTML = options[k].map(o => `<div class="chip" data-v="${o.v}" onclick="selectChip('${k}','${o.v}',this)">${o.label}</div>`).join('');
+});
+
+function selectChip(key, val, el) {
+  selected[key] = val;
+  document.querySelectorAll(`#${key}Row .chip`).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  updateBtn();
+}
+
+function updateBtn() {
+  const hasFace = faceData !== null;
+  const hasHeight = selected.height !== null;
+  document.getElementById('btnDiagnose').disabled = !(hasFace && hasHeight);
+}
+
+// ═══════ CHARACTER DB ═══════
+const characters = [
+  {name:'蕾姆',series:'Re:从零开始',gender:'female',height:'mid-low',build:'slim',face:'round',cost:'low',complexity:'低',tags:['女仆装','短发','经典']},
+  {name:'血小板',series:'工作细胞',gender:'female',height:'short',build:'slim',face:'round',cost:'low',complexity:'低',tags:['制服','可爱','低门槛']},
+  {name:'甘露寺蜜璃',series:'鬼灭之刃',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['和服','长发','人气']},
+  {name:'时崎狂三',series:'约会大作战',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['哥特','双马尾','经典']},
+  {name:'02',series:'DARLING in the FRANXX',gender:'female',height:'mid',build:'slim',face:'oval',cost:'low',complexity:'低',tags:['紧身衣','粉发','人气']},
+  {name:'薇尔莉特',series:'紫罗兰永恒花园',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['洋装','金发','精致']},
+  {name:'蝴蝶忍',series:'鬼灭之刃',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['和服','蝴蝶发饰','优雅']},
+  {name:'亚丝娜',series:'刀剑神域',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['战斗服','长发','经典']},
+  {name:'Saber',series:'Fate系列',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['铠甲','金发','经典']},
+  {name:'艾米莉亚',series:'Re:从零开始',gender:'female',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['精灵','银发','优雅']},
+  {name:'五更琉璃',series:'俺妹',gender:'female',height:'mid-low',build:'slim',face:'round',cost:'low',complexity:'低',tags:['哥特','黑长直','经典']},
+  {name:'三笠·阿克曼',series:'进击的巨人',gender:'female',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',tags:['军装','短发','飒']},
+  {name:'八重神子',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['和风','粉发','精致']},
+  {name:'雷电将军',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['和风','紫发','华丽']},
+  {name:'纳西妲',series:'原神',gender:'female',height:'short',build:'slim',face:'round',cost:'mid',complexity:'中',tags:['精灵','可爱','小巧']},
+  {name:'康娜',series:'小林家的龙女仆',gender:'female',height:'short',build:'soft',face:'round',cost:'low',complexity:'低',tags:['可爱','日常','低门槛']},
+  {name:'托尔',series:'小林家的龙女仆',gender:'female',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['女仆','龙角','可爱']},
+  {name:'五条悟',series:'咒术回战',gender:'male',height:'mid-high',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['制服','白毛','人气']},
+  {name:'炭治郎',series:'鬼灭之刃',gender:'male',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',tags:['和服','日轮刀','经典']},
+  {name:'利威尔',series:'进击的巨人',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['军装','短发','人气']},
+  {name:'太宰治',series:'文豪野犬',gender:'male',height:'mid',build:'slim',face:'oval',cost:'low',complexity:'低',tags:['风衣','绷带','低门槛']},
+  {name:'宇智波佐助',series:'火影忍者',gender:'male',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['忍者','黑发','经典']},
+  {name:'漩涡鸣人',series:'火影忍者',gender:'male',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',tags:['忍者','金发','经典']},
+  {name:'杀生丸',series:'犬夜叉',gender:'male',height:'mid-high',build:'slim',face:'long',cost:'mid',complexity:'中',tags:['和服','银发','高冷']},
+  {name:'中原中也',series:'文豪野犬',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'low',complexity:'低',tags:['西装','帽子','低门槛']},
+  {name:'钟离',series:'原神',gender:'male',height:'mid-high',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['中式','西装','华丽']},
+  {name:'灶门祢豆子',series:'鬼灭之刃',gender:'female',height:'mid-low',build:'slim',face:'round',cost:'mid',complexity:'中',tags:['和服','竹筒','可爱']},
+  {name:'胡桃',series:'原神',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['中式','双马尾','活泼']},
+  {name:'刻晴',series:'原神',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['中式','紫发','干练']},
+  {name:'魈',series:'原神',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['中式','绿发','冷酷']},
+  {name:'散兵',series:'原神',gender:'male',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['和风','紫发','人气']},
+  {name:'木之本樱',series:'魔卡少女樱',gender:'female',height:'short',build:'slim',face:'round',cost:'mid',complexity:'中',tags:['魔法少女','可爱','经典']},
+  {name:'阿尼亚',series:'间谍过家家',gender:'female',height:'short',build:'slim',face:'round',cost:'low',complexity:'低',tags:['日常','粉发','超人气']},
+  {name:'约尔',series:'间谍过家家',gender:'female',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['日常','黑发','人气']},
+  {name:'黄昏',series:'间谍过家家',gender:'male',height:'mid-high',build:'athletic',face:'square',cost:'low',complexity:'低',tags:['西装','金发','低门槛']},
+  {name:'楪祈',series:'罪恶王冠',gender:'female',height:'mid-low',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['歌姬','粉发','经典']},
+  {name:'艾伦·耶格尔',series:'进击的巨人',gender:'male',height:'mid',build:'athletic',face:'oval',cost:'mid',complexity:'中',tags:['军装','棕发','人气']},
+  {name:'金木研',series:'东京食尸鬼',gender:'male',height:'mid',build:'slim',face:'oval',cost:'mid',complexity:'中',tags:['面具','白发','经典']},
+  {name:'达达利亚',series:'原神',gender:'male',height:'mid-high',build:'athletic',face:'oval',cost:'high',complexity:'高',tags:['战斗服','橙发','华丽']},
+  {name:'甘雨',series:'原神',gender:'female',height:'mid',build:'slim',face:'oval',cost:'high',complexity:'高',tags:['中式','蓝发','仙气']},
+];
+
+// ═══════ MATCHING ═══════
+const faceCompatibility = {
+  round: {round:30,oval:15,square:5,heart:0,long:0},
+  oval: {round:15,oval:30,square:10,heart:12,long:8},
+  heart: {round:5,oval:15,square:0,heart:30,long:10},
+  square: {round:5,oval:10,square:30,heart:0,long:10},
+  long: {round:0,oval:10,square:10,heart:8,long:30},
+};
+
+function diagnose() {
+  if (!faceData) return;
+  const d = faceData;
+  const results = characters.map(char => {
+    let score = 0, reasons = [];
+
+    // Gender
+    if (selected.gender && selected.gender !== 'any') {
+      if (char.gender === selected.gender) { score += 25; reasons.push('性别匹配'); }
+      else { score -= 100; return {char,score,reasons}; }
+    }
+
+    // Face shape (most important)
+    const faceScore = faceCompatibility[d.faceShape]?.[char.face] || 0;
+    score += faceScore;
+    if (faceScore >= 25) reasons.push('脸型高度匹配');
+    else if (faceScore >= 10) reasons.push('脸型兼容');
+
+    // Height
+    if (char.height === selected.height) { score += 20; reasons.push('身高完美匹配'); }
+    else {
+      const hOrder = ['short','mid-low','mid','mid-high','tall'];
+      const diff = Math.abs(hOrder.indexOf(char.height) - hOrder.indexOf(selected.height));
+      if (diff === 1) { score += 12; reasons.push('身高接近'); }
+      else if (diff === 2) score += 4;
+    }
+
+    // Build
+    if (selected.build) {
+      if (char.build === selected.build) { score += 15; reasons.push('体型契合'); }
+      else if (char.build === 'average' && (selected.build==='slim'||selected.build==='soft')) { score += 8; }
+      else if (char.build === 'slim' && selected.build==='average') { score += 8; }
+    }
+
+    // Facial fullness
+    if (d.fullness === 'soft' && char.face === 'round') { score += 8; reasons.push('面部饱满度匹配'); }
+    if (d.fullness === 'slim' && char.face === 'heart') { score += 6; }
+
+    // Budget
+    if (selected.budget && selected.budget !== 'any') {
+      if (char.cost === selected.budget) { score += 8; reasons.push('预算匹配'); }
+    }
+
+    return {char,score,reasons};
+  }).filter(r => r.score > 0).sort((a,b) => b.score - a.score);
+
+  document.getElementById('homeView').classList.remove('active');
+  document.getElementById('resultView').classList.add('active');
+  document.getElementById('matchCount').textContent = results.length;
+
+  const shapeNames = {round:'圆脸',oval:'鹅蛋脸',square:'方脸',heart:'瓜子脸',long:'长脸'};
+  const list = document.getElementById('resultList');
+  list.innerHTML = results.map((r,i) => {
+    const c = r.char; const isLocked = i >= 3;
+    const maxScore = 100; const matchPct = Math.min(99, Math.round(r.score / maxScore * 100));
+    return `
+      <div class="char-card${isLocked?' premium':''}">
+        <div class="char-rank">#${i+1}</div>
+        <div class="char-header">
+          <div class="char-avatar">${c.gender==='female'?'👩':'👨'}</div>
+          <div class="char-info">
+            <div class="char-name">${c.name}</div>
+            <div class="char-series">${c.series}</div>
+          </div>
+          <div class="char-match">${matchPct}%</div>
+        </div>
+        <div class="char-why">
+          <strong>为什么适合你：</strong>你的脸型是<strong>${shapeNames[faceData.faceShape]}</strong>（宽高比${faceData.fwFh}），${c.name}的脸型为${shapeNames[c.face]}→${r.reasons.join(' · ')}
+        </div>
+        <div class="char-tags">
+          ${c.tags.map(t => `<span class="char-tag ${t==='可爱'||t==='低门槛'?'pink':t==='经典'?'green':''}">${t}</span>`).join('')}
+        </div>
+        <div class="char-cost">
+          <span>💰 预估 <b>${c.cost==='low'?'500以内':c.cost==='mid'?'500-2000':'2000+'}</b></span>
+          ${!isLocked?`<span style="color:#ff9ec4;cursor:pointer;margin-left:auto;" onclick="showToast('🔒 详细出装清单为付费功能（开发中）')">📋 看出装清单 →</span>`:''}
+        </div>
+      </div>`;
+  }).join('');
+
+  if (results.length > 3) {
+    list.innerHTML += `
+      <div class="lock-banner">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-title">解锁全部 ${results.length} 个角色</div>
+        <div class="lock-desc">完整匹配列表 + 出装清单 + 角色速通卡<br>含购买渠道、省钱平替、OOC避雷指南</div>
+        <button class="btn-unlock" onclick="showToast('💰 9.9元解锁全部（支付功能开发中）')">✨ 9.9 解锁全部</button>
+      </div>`;
+  }
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function goHome() {
+  document.getElementById('resultView').classList.remove('active');
+  document.getElementById('homeView').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════ UTILS ═══════
+function showToast(msg) {
+  const t = document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+let loadingTimer = null;
+function showLoading(msg) {
+  document.getElementById('loadingText').textContent=msg;
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+  // Safety timeout: hide loading after 20s
+  if (loadingTimer) clearTimeout(loadingTimer);
+  loadingTimer = setTimeout(() => { hideLoading(); showToast('⚠️ 加载超时，请检查网络后重试'); }, 20000);
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+function updateBtn() {
+  const hasFace = faceData !== null;
+  const hasHeight = selected.height !== null;
+  document.getElementById('btnDiagnose').disabled = !(hasFace && hasHeight);
+}
+document.getElementById('btnDiagnose').addEventListener('click',diagnose);
+
+// Models will be loaded on-demand when user uploads a photo (in loadImageFile)
+</script>
+</body>
+</html>

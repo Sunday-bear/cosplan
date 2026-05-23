@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head><title>FaceAPI Test</title>
+<script defer src="face-api.min.js"></script>
+</head>
+<body>
+<h1>测试 face-api.js 加载</h1>
+<div id="status">加载中...</div>
+<video id="video" autoplay style="display:none"></video>
+<canvas id="canvas"></canvas>
+<input type="file" accept="image/*" id="fileInput">
+<script>
+const status = document.getElementById('status');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+async function run() {
+    status.textContent = '等待 faceapi 就绪...';
+    let waited = 0;
+    while (typeof faceapi === 'undefined' || !faceapi.nets) {
+        if (waited > 20) { status.textContent = '超时'; return; }
+        await new Promise(r => setTimeout(r, 500));
+        waited++;
+    }
+    status.textContent = 'faceapi 就绪，加载模型...';
+    
+    try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri('models');
+        await faceapi.nets.faceLandmark68Net.loadFromUri('models');
+        status.textContent = '模型加载成功！可以分析人脸了';
+    } catch(e) {
+        status.textContent = '模型加载失败: ' + e.message;
+        console.error(e);
+    }
+}
+
+document.getElementById('fileInput').onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const img = await createImageBitmap(file);
+    canvas.width = img.width / 2;
+    canvas.height = img.height / 2;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    
+    status.textContent = '检测人脸...';
+    try {
+        const det = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions({inputSize:320})).withFaceLandmarks();
+        if (det) {
+            status.textContent = '检测到人脸！' + JSON.stringify({x: det.alignedRect._box.x, y: det.alignedRect._box.y, w: det.alignedRect._box.width, h: det.alignedRect._box.height});
+            // Draw box
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(det.alignedRect._box.x, det.alignedRect._box.y, det.alignedRect._box.width, det.alignedRect._box.height);
+        } else {
+            status.textContent = '未检测到人脸';
+        }
+    } catch(e) {
+        status.textContent = '检测失败: ' + e.message;
+        console.error(e);
+    }
+};
+
+run();
+</script>
+</body>
+</html>

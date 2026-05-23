@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Cosplan · 角色快诊</title>
+  <script defer src="face-api.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,"PingFang SC",sans-serif;background:#0d0614;color:#fff;max-width:480px;margin:0 auto;padding:20px 16px 80px}
+    .logo{text-align:center;font-size:28px;font-weight:800;margin:30px 0 4px;background:linear-gradient(135deg,#ff6b9d,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .sub{text-align:center;font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px}
+    .label{font-size:14px;font-weight:700;margin:16px 0 8px}
+    #photoBox{background:rgba(255,255,255,0.06);border:2px dashed rgba(255,255,255,0.15);border-radius:18px;padding:40px 20px;text-align:center;cursor:pointer;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    #photoBox.has-photo{border-style:solid;border-color:rgba(255,107,157,0.3);padding:8px}
+    #photoBox canvas{width:100%;max-height:300px;border-radius:12px;display:none}
+    #photoBox.has-photo canvas{display:block}
+    #photoBox.has-photo span{display:none}
+    .icon{font-size:48px;margin-bottom:8px}
+    .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+    .chip{padding:10px 18px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.55)}
+    .chip.active{background:rgba(255,107,157,0.18);border-color:#ff6b9d;color:#ff9ec4}
+    #btnDiag{width:100%;height:54px;background:linear-gradient(135deg,#ff6b9d,#7c3aed);color:#fff;border:none;border-radius:12px;font-size:17px;font-weight:700;margin-top:20px;cursor:pointer}
+    #btnDiag:disabled{opacity:0.35;cursor:not-allowed}
+    .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;z-index:999;display:none}
+    .toast.show{display:block}
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:flex;align-items:center;justify-content:center;display:none}
+    .overlay.show{display:flex}
+  </style>
+</head>
+<body>
+  <div class="logo">Cosplan</div>
+  <div class="sub">自拍一张，找到天生适合你的角色</div>
+
+  <div class="label">📷 拍一张正面照</div>
+  <div id="photoBox">
+    <span class="icon">🤳</span>
+    <span>点击拍照或选照片</span>
+    <canvas id="cv"></canvas>
+  </div>
+  <input type="file" accept="image/*" id="fi" style="display:none">
+
+  <div class="label">📏 身高范围</div>
+  <div class="chip-row" id="heightRow"></div>
+
+  <div class="label">🏃 体型</div>
+  <div class="chip-row" id="buildRow"></div>
+
+  <div class="label">🎭 角色性别</div>
+  <div class="chip-row" id="genderRow"></div>
+
+  <div class="label">💰 预算</div>
+  <div class="chip-row" id="budgetRow"></div>
+
+  <button id="btnDiag" disabled>🔮 开始诊断</button>
+  <div class="toast" id="toast"></div>
+  <div class="overlay show" id="loading"><span id="loadingText">加载中...</span></div>
+
+<script>
+const APIBASE = 'https://api.cosplan.top';
+var faceData = null;
+var selected = {height:null,build:null,gender:null,budget:null};
+var modelsLoaded = false;
+
+const OPTIONS = {
+  height:[{v:'short',label:'155以下'},{v:'mid-low',label:'155-165'},{v:'mid',label:'165-175'},{v:'mid-high',label:'175-185'},{v:'tall',label:'185以上'}],
+  build:[{v:'slim',label:'偏瘦'},{v:'average',label:'标准'},{v:'athletic',label:'有肌肉'},{v:'soft',label:'偏圆润'}],
+  gender:[{v:'female',label:'女性角色'},{v:'male',label:'男性角色'},{v:'any',label:'不限'}],
+  budget:[{v:'low',label:'500以内'},{v:'mid-low',label:'500-1000'},{v:'mid',label:'1000-2000'},{v:'high',label:'2000+'}]
+};
+
+// Init chips
+['height','build','gender','budget'].forEach(function(k) {
+  var row = document.getElementById(k+'Row');
+  row.innerHTML = OPTIONS[k].map(function(o) {
+    return '<div class="chip" data-k="'+k+'" data-v="'+o.v+'" onclick="selectChip(this)">'+o.label+'</div>';
+  }).join('');
+});
+
+function selectChip(el) {
+  var k = el.dataset.k;
+  var v = el.dataset.v;
+  selected[k] = selected[k] === v ? null : v;
+  el.parentNode.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('active'); });
+  if (selected[k]) el.classList.add('active');
+  updateDiagBtn();
+}
+
+function showToast(m) {
+  var t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},2500);
+}
+
+function showLoading(m) {
+  document.getElementById('loadingText').textContent = m||'处理中...';
+  document.getElementById('loading').classList.add('show');
+}
+
+function hideLoading() {
+  document.getElementById('loading').classList.remove('show');
+}
+
+function updateDiagBtn() {
+  document.getElementById('btnDiag').disabled = !(faceData && selected.height);
+}
+
+// Photo capture
+var photoBox = document.getElementById('photoBox');
+var fi = document.getElementById('fi');
+
+photoBox.onclick = function() { fi.click(); };
+
+fi.onchange = function(e) {
+  if (!e.target.files[0]) return;
+  var file = e.target.files[0];
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var img = new Image();
+    img.onload = function() {
+      var cv = document.getElementById('cv');
+      var maxW = photoBox.clientWidth - 16;
+      var maxH = 300;
+      var w = img.width, h = img.height;
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+      if (h > maxH) { w = w * maxH / h; h = maxH; }
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      photoBox.classList.add('has-photo');
+      // Auto-analyze face
+      analyzeFace(cv, w, h);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+async function loadModels() {
+  if (modelsLoaded) return true;
+  showLoading('加载AI模型...');
+  try {
+    var waited = 0;
+    while (typeof faceapi === 'undefined') {
+      if (waited++ > 40) throw new Error('超时');
+      await new Promise(function(r) { setTimeout(r, 500); });
+    }
+    await faceapi.nets.tinyFaceDetector.loadFromUri('models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('models');
+    modelsLoaded = true;
+    hideLoading();
+    return true;
+  } catch(e) {
+    hideLoading();
+    showToast('模型加载失败: '+e.message);
+    return false;
+  }
+}
+
+async function analyzeFace(cv) {
+  var ok = await loadModels();
+  if (!ok) return;
+  showLoading('分析面部...');
+  try {
+    var det = await faceapi.detectSingleFace(cv, new faceapi.TinyFaceDetectorOptions({inputSize:320})).withFaceLandmarks();
+    if (!det) { hideLoading(); showToast('未检测到人脸，请重拍'); return; }
+    var lm = det.landmarks;
+    var jaw = lm.getJawOutline();
+    var fw = Math.abs(lm.getRightEyeBrow()[0].x - lm.getLeftEyeBrow()[0].x);
+    var fh = Math.abs(jaw[8].y - (lm.getLeftEyeBrow()[2].y + lm.getRightEyeBrow()[2].y)/2);
+    var fwFh = fw / fh;
+    var jawLevel = (lm.getLeftEyeBrow()[2].y + lm.getRightEyeBrow()[2].y)/2 + fh * 0.6;
+    var jawL = jaw.filter(function(p) { return Math.abs(p.y - jawLevel) < 10; });
+    var jw = (jawL.length >= 2) ? Math.abs(jawL[jawL.length-1].x - jawL[0].x) : fw;
+    var jawRatio = jw / fw;
+    var eyeDist = Math.abs(lm.getLeftEye()[0].x - lm.getRightEye()[3].x) / fw;
+    faceData = {fwFh:fwFh, jawRatio:jawRatio, eyeDist:eyeDist};
+    hideLoading();
+    showToast('面部分析完成 ✅');
+    updateDiagBtn();
+  } catch(e) {
+    hideLoading();
+    showToast('分析出错: '+e.message);
+  }
+}
+
+document.getElementById('btnDiag').onclick = async function() {
+  if (!faceData || !selected.height) return;
+  showLoading('匹配角色...');
+  try {
+    var resp = await fetch(APIBASE+'/search', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({character:'初音ミク', count:3}),
+      timeout:15000
+    });
+    var data = await resp.json();
+    hideLoading();
+    showToast('API测试成功! 返回'+data.images.length+'张图');
+    console.log('API test:', data);
+  } catch(e) {
+    hideLoading();
+    showToast('API测试失败: '+e.message);
+  }
+};
+
+// Init
+updateDiagBtn();
+hideLoading();
+showToast('准备好开始啦 📸');
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "Cosplan - 漫展集邮快修",
+  "short_name": "Cosplan",
+  "description": "拍完10秒变能看。漫展集邮自拍一键美化：智能构图 · 滤镜调色 · 相框 · 文案",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0614",
+  "theme_color": "#ff6b9d",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📸</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
