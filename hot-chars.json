@@ -1,0 +1,75 @@
+{
+  "updatedAt": "2026-05-23T11:35:00+08:00",
+  "popular": [
+    {
+      "name": "卡提希娅",
+      "series": "鸣潮",
+      "img": "images/popular/卡提希娅_1.jpg",
+      "color": "#FF6B9D",
+      "likes": "🔥 4028"
+    },
+    {
+      "name": "流萤",
+      "series": "崩坏：星穹铁道",
+      "img": "images/popular/流萤_2.jpg",
+      "color": "#FFD700",
+      "likes": "🔥 8701"
+    },
+    {
+      "name": "昔涟",
+      "series": "崩坏：星穹铁道",
+      "img": "images/popular/昔涟_1.jpg",
+      "color": "#B388FF",
+      "likes": "🔥 热门"
+    },
+    {
+      "name": "胡桃",
+      "series": "原神",
+      "img": "images/popular/胡桃_1.jpg",
+      "color": "#FF4444",
+      "likes": "🔥 4021"
+    },
+    {
+      "name": "折枝",
+      "series": "鸣潮",
+      "img": "images/popular/折枝_1.jpg",
+      "color": "#4FC3F7",
+      "likes": "🔥 热门"
+    },
+    {
+      "name": "守岸人",
+      "series": "鸣潮",
+      "img": "images/popular/守岸人_1.jpg",
+      "color": "#81C784",
+      "likes": "🔥 热门"
+    },
+    {
+      "name": "长离",
+      "series": "鸣潮",
+      "img": "images/popular/长离_1.jpg",
+      "color": "#FF7043",
+      "likes": "🔥 热门"
+    },
+    {
+      "name": "霍霍",
+      "series": "崩坏：星穹铁道",
+      "img": "images/popular/霍霍_1.jpg",
+      "color": "#CE93D8",
+      "likes": "🔥 5611"
+    },
+    {
+      "name": "艾莲",
+      "series": "绝区零",
+      "img": "images/popular/艾莲_1.jpg",
+      "color": "#64B5F6",
+      "likes": "🔥 热门"
+    },
+    {
+      "name": "妮露",
+      "series": "原神",
+      "img": "images/popular/妮露_1.jpg",
+      "color": "#4DB6AC",
+      "likes": "🔥 热门"
+    }
+  ]
+}
